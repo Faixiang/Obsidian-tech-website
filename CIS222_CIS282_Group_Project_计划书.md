@@ -1,14 +1,3 @@
----
-AIGC:
-    Label: "1"
-    ContentProducer: 001191440300708461136T1XGW3
-    ProduceID: c6eb62ba6ec5a28db2139adf23a2fe4b_4d1d7a05c47c11f197b3525400248c00
-    ReservedCode1: cqvRpWFD6r9EJ+yv1FlRPLO9xXXxoJfbbUm8J7bih3rZW5hde5bBQiMRbBOWIUxqUHBM6LHGwWQeN7SuuRqP4TD7/nuHuFc0LWDXKvfHiMttPan+nUo1f2qN7jAXeqZHO7wihgM8MhgPN/e9stJ3pUUSmlkTvXsKSU5+qVHR1bqJThfEUoRJ3AseLRI=
-    ContentPropagator: 001191440300708461136T1XGW3
-    PropagateID: c6eb62ba6ec5a28db2139adf23a2fe4b_4d1d7a05c47c11f197b3525400248c00
-    ReservedCode2: cqvRpWFD6r9EJ+yv1FlRPLO9xXXxoJfbbUm8J7bih3rZW5hde5bBQiMRbBOWIUxqUHBM6LHGwWQeN7SuuRqP4TD7/nuHuFc0LWDXKvfHiMttPan+nUo1f2qN7jAXeqZHO7wihgM8MhgPN/e9stJ3pUUSmlkTvXsKSU5+qVHR1bqJThfEUoRJ3AseLRI=
----
-
 # CIS222/282 Group Project — 企业官网 E-Commerce 型网站 项目计划书
 
 ```
@@ -110,7 +99,7 @@ AIGC:
 
 ## 九、网站重设计提示词（康陶实测参数 · 精准复刻版）
 
-> 本章由康陶集团官网 kangtao-corp.com 的浏览器计算样式实测数据反推，并将参数映射到曜石 V1.1.1 色板。用于指导 WorkBuddy 按同一套「版式硬参数」重设计网站，解决上一版效果偏软、层次与秩序感不足的问题。
+> 本章由康陶集团官网 kangtao-corp.com 的浏览器计算样式实测数据反推，并将参数映射到曜石 V1.1.1 色板。用于指导改版按同一套「版式硬参数」重设计网站，解决上一版效果偏软、层次与秩序感不足的问题。
 
 ### 9.1 色彩映射表（康陶 → 曜石）
 
@@ -190,7 +179,7 @@ AIGC:
 
 #### 9.5.1 三条滚动播报条专项硬参数（补丁 v1.1.2）
 
-> 补丁背景：康陶实测发现三条跑马灯共用同一个 `@keyframes ticker`，但元素宽与 duration 各不相同，折算速度相差 3.6 倍（11.93 / 7.86 / 43.15 px/s）；且 `.ann-ticker` 被容器 `flex:1` 拉伸后，`translateX(-50%)` 的基准变成「元素自身宽度」而非「内容宽度」，循环回溯时跳变；`.hero-ticker-track` 内容未复制两份，只走完一半即回溯。WorkBuddy 若照抄「固定 duration + translateX(-50%)」，速度会随视口宽度线性放大，即用户看到的「滑得飞快」。
+> 补丁背景：康陶实测发现三条跑马灯共用同一个 `@keyframes ticker`，但元素宽与 duration 各不相同，折算速度相差 3.6 倍（11.93 / 7.86 / 43.15 px/s）；且 `.ann-ticker` 被容器 `flex:1` 拉伸后，`translateX(-50%)` 的基准变成「元素自身宽度」而非「内容宽度」，循环回溯时跳变；`.hero-ticker-track` 内容未复制两份，只走完一半即回溯。若照抄「固定 duration + translateX(-50%)」，速度会随视口宽度线性放大，即用户看到的「滑得飞快」。
 
 | 项 | 顶部公告条 | 新闻区行情跑马灯 | Hero 底部 ticker |
 |----|-----------|----------------|-----------------|
@@ -274,7 +263,7 @@ function rebuildTicker(track, html, speed) {
 
 #### 9.6.1 机制隔离：Hero 全息展台 ≠ 滚动播报条（补丁 v1.1.2）
 
-> 实测结论：康陶站 `.holo-showcase` 与三条滚动条**是两套互不复用的机制**——全息展台无任何横向位移关键帧，走 `holo-float`（3D `rotateY / rotateX / translateY` 浮沉，8s `ease-in-out`）+ `holo-scan`（扫描线）；跑马灯才走 `translateX` 的 `ticker` / `nb-ticker`。上一版 WorkBuddy 将 Hero 示意图与公告条、新闻跑马灯处理成同一「滚动组件」，是示意图抖动的主因。
+> 实测结论：康陶站 `.holo-showcase` 与三条滚动条**是两套互不复用的机制**——全息展台无任何横向位移关键帧，走 `holo-float`（3D `rotateY / rotateX / translateY` 浮沉，8s `ease-in-out`）+ `holo-scan`（扫描线）；跑马灯才走 `translateX` 的 `ticker` / `nb-ticker`。上一版将 Hero 示意图与公告条、新闻跑马灯处理成同一「滚动组件」，是示意图抖动的主因。
 
 | 机制 | 归属元素 | 允许的关键帧 | 禁止 |
 |------|----------|--------------|------|
@@ -288,7 +277,7 @@ function rebuildTicker(track, html, speed) {
 - 全息展台内部**禁止出现任何 `top` / `width` 动画**，扫描线改用 `transform: translateY`、进度条改用 `transform: scaleX`，以消除抖动与掉帧；
 - `.hc-live-dot` 一类脉冲动画必须有真实存在的 keyframes（康陶站引用了未定义的 `pulse`，实际不生效，属反面教材，勿照抄）。
 
-### 9.7 重设计提示词（可直接投喂 WorkBuddy）
+### 9.7 重设计要点
 
 ```
 请按以下「版式硬参数」重做曜石智能科技企业官网，不要自由发挥版式：
