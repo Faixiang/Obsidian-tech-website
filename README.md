@@ -7,7 +7,7 @@
 |---|---|
 | **品牌** | 曜石（OBSIDIAN） |
 | **全稱** | 曜石智能科技有限公司 · OBSIDIAN Technologies |
-| **線上展示** | https://faixiang.github.io/obsidian-tech-website/ |
+| **線上展示** | https://faixiang.github.io/Obsidian-tech-website/ |
 | **倉庫** | https://github.com/Faixiang/obsidian-tech-website |
 | **截止日期** | 2026-12-20 23:59 |
 
