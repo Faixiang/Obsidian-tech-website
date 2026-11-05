@@ -118,35 +118,30 @@
   var nav = document.getElementById('site-nav');
 
   if (toggle && nav) {
-    toggle.addEventListener('click', function () {
-      var open = nav.classList.toggle('is-open');
+    function setNav(open) {
+      nav.classList.toggle('is-open', open);
       toggle.setAttribute('aria-expanded', String(open));
+      toggle.setAttribute('aria-label', open ? '收起導航' : '展開導航');
       document.body.classList.toggle('nav-locked', open);
+    }
+
+    toggle.addEventListener('click', function () {
+      setNav(!nav.classList.contains('is-open'));
     });
 
     nav.addEventListener('click', function (e) {
-      if (e.target.closest('a')) {
-        nav.classList.remove('is-open');
-        toggle.setAttribute('aria-expanded', 'false');
-        document.body.classList.remove('nav-locked');
-      }
+      if (e.target.closest('a')) setNav(false);
     });
 
     document.addEventListener('keydown', function (e) {
       if (e.key === 'Escape' && nav.classList.contains('is-open')) {
-        nav.classList.remove('is-open');
-        toggle.setAttribute('aria-expanded', 'false');
-        document.body.classList.remove('nav-locked');
+        setNav(false);
         toggle.focus();
       }
     });
 
     window.addEventListener('resize', function () {
-      if (window.innerWidth > 960 && nav.classList.contains('is-open')) {
-        nav.classList.remove('is-open');
-        toggle.setAttribute('aria-expanded', 'false');
-        document.body.classList.remove('nav-locked');
-      }
+      if (window.innerWidth > 960) setNav(false);
     });
   }
 

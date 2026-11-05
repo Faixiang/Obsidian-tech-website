@@ -3677,3 +3677,143 @@ body.has-halo-bg .page-header,
 body.has-halo-bg .cta-band {
   background: transparent;
 }
+
+/* ==========================================================================
+   Mobile refinement (shared by all 16 pages)
+   Keep the desktop composition; simplify spacing and controls on small screens.
+   ========================================================================== */
+@media (max-width: 960px) {
+  :root { --nav-main: 64px; }
+
+  /* Fixed navigation must fit both the brand and account actions at 320px. */
+  .site-header__inner { gap: var(--s3); }
+  .brand img { height: 34px; max-width: 100%; }
+  .nav__toggle {
+    width: 44px;
+    height: 44px;
+    flex-shrink: 0;
+  }
+  .nav {
+    padding-bottom: env(safe-area-inset-bottom, 0);
+    overscroll-behavior: contain;
+  }
+  .nav__list { padding-inline: var(--s6); }
+  .nav__link { min-height: 52px; font-size: 16px; }
+  .hdr-actions { gap: var(--s2); margin-left: 0; }
+  .hdr-actions .btn { padding: 10px 14px; letter-spacing: 1px; }
+  .hdr-cart { width: 40px; height: 44px; }
+  .hdr-user__out { min-height: 44px; }
+
+  /* Avoid fixed-width grid children forcing tracks wider than their container. */
+  .grid > *,
+  .hero__inner > *,
+  .intro-grid > *,
+  .nb-main > *,
+  .broadcast > * { min-width: 0; }
+
+  .section,
+  .section--tall { padding-block: var(--s16); }
+  .section--mid,
+  .section--tight { padding-block: var(--s8); }
+  .page-head,
+  .page-header {
+    padding-top: calc(var(--nav-total) + var(--s8)) !important;
+    padding-bottom: var(--s8);
+  }
+  .content { padding-bottom: var(--s16); }
+  .mn-brand__ctas { margin-top: var(--s6); }
+  .mn-brand__ctas .btn { min-height: 44px; }
+  .hero-ctas .btn,
+  .hero__actions .btn { min-height: 44px; }
+  .cta-band { padding-block: var(--s8); }
+  .cta-band__inner { align-items: flex-start; }
+
+  /* Tables keep their column relationships and scroll inside their own panel. */
+  .table-scroll {
+    max-width: 100%;
+    overflow-x: auto;
+    overscroll-behavior-inline: contain;
+    -webkit-overflow-scrolling: touch;
+  }
+  .table-scroll .table { min-width: 600px; }
+  .tab-nav { scrollbar-width: thin; }
+  .tab-btn { min-height: 44px; }
+  .acc__trigger { min-height: 52px; }
+  .qty__btn { width: 40px; height: 40px; }
+  .nb-ch { min-height: 40px; }
+  .toast {
+    width: max-content;
+    max-width: calc(100vw - 32px);
+    bottom: calc(var(--s6) + env(safe-area-inset-bottom, 0));
+  }
+}
+
+@media (max-width: 600px) {
+  :root { --gutter-x: 20px; }
+
+  .container,
+  .ft-inner { padding-inline: var(--gutter-x); }
+  .page-head,
+  .page-header,
+  .content { padding-inline: var(--gutter-x) !important; }
+
+  .site-header__inner { gap: var(--s2); }
+  .brand img { height: 28px; }
+  .hdr-actions { gap: var(--s1); }
+  .hdr-actions .btn { padding: 9px 10px; font-size: 10px; }
+  .hdr-cart { width: 32px; }
+  .nav__list { padding: var(--s3) var(--gutter-x) var(--s8); }
+
+  .h2,
+  .cta-band__title { font-size: 28px; }
+  .h3,
+  .card__title,
+  .feature__title,
+  .nb-lead-title,
+  .acc__title { font-size: 20px; }
+  .page-head__lead,
+  .page-header p { margin-top: var(--s4); }
+  .section-head { margin-bottom: var(--s6); }
+  .section-head__sub { line-height: 1.8; }
+  .div-card { padding: var(--s8) var(--s6); }
+  .card__body,
+  .nb-studio,
+  .nb-sidebar { padding: var(--s6); }
+  .acc__trigger { padding: var(--s4); }
+  .acc__panel { padding: 0 var(--s4) var(--s4); }
+
+  /* Full-width actions are easier to reach and cannot collide with long text. */
+  .mn-brand__ctas,
+  .hero-ctas,
+  .hero__actions { flex-direction: column; align-items: stretch; }
+  .mn-brand__ctas .btn,
+  .hero-ctas .btn,
+  .hero__actions .btn { width: 100%; }
+  .cta-band__inner .btn { min-height: 44px; }
+  .row-between { flex-wrap: wrap; }
+  .spec__row { flex-wrap: wrap; }
+  .spec__val { overflow-wrap: anywhere; }
+  .price { font-size: 22px; }
+  .broadcast__item { padding: var(--s3); gap: var(--s3); }
+  .broadcast__date { min-width: 68px; }
+  .nb-top { flex-wrap: wrap; gap: var(--s2); }
+  .nb-ts { letter-spacing: 1px; }
+
+  .stats,
+  .stats-row { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .stats__item,
+  .stat-box { padding: var(--s4); }
+  .stats__num,
+  .stat-box .num { font-size: 22px; }
+  .site-footer { padding-top: var(--s12); }
+  .ft-col a { display: flex; align-items: center; min-height: 44px; }
+  .ft-bottom { line-height: 1.8; letter-spacing: 1px; }
+  .ft-final { letter-spacing: 1px; overflow-wrap: anywhere; }
+}
+
+@media (max-width: 360px) {
+  :root { --gutter-x: 16px; }
+  .brand img { height: 25px; }
+  .hdr-actions .btn { padding-inline: 8px; }
+  .hdr-cart { width: 28px; }
+}
