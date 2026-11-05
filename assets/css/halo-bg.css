@@ -1,0 +1,59 @@
+﻿/* Site-wide HaloFlux background (linked from all pages).
+   HALOFLUX by Ryder191 — https://github.com/Ryder191/haloflux — PolyForm NC 1.0.0 */
+
+#halo-bg {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 1;
+  mix-blend-mode: lighter;
+}
+
+/* Keep page chrome above the glow */
+body.has-halo-bg .ann-bar,
+body.has-halo-bg .site-header,
+body.has-halo-bg main,
+body.has-halo-bg .section,
+body.has-halo-bg footer,
+body.has-halo-bg .toast {
+  position: relative;
+}
+
+body.has-halo-bg main,
+body.has-halo-bg .section {
+  z-index: 1;
+}
+
+body.has-halo-bg .site-header {
+  z-index: 1001;
+}
+
+body.has-halo-bg .ann-bar {
+  z-index: 1002;
+}
+
+/* Soft read plate so hero copy stays legible over the ring */
+body.has-halo-bg .hero,
+body.has-halo-bg .hero-panel,
+body.has-halo-bg .hero-copy {
+  text-shadow: 0 1px 18px rgba(5, 8, 16, 0.55);
+}
+
+#particles-off {
+  display: none !important;
+}
+
+body.halo-bg-off #halo-bg {
+  display: none !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #halo-bg {
+    mix-blend-mode: normal;
+    opacity: 0.85;
+    filter: none;
+  }
+}

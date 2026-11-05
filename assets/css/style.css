@@ -278,15 +278,13 @@ em, i, cite { font-style: normal; }
 .section--mid { padding-block: var(--s12); }
 .section--flush-top { padding-top: 0; }
 
-.bg-void { background: var(--void); }
-.bg-void2 { background: var(--void2); }
+.bg-void { background: transparent; }
+.bg-void2 { background: transparent; }
 .bg-void3 { background: var(--void3); }
 .bg-cloud { background: var(--cloud); color: var(--cloud-fg); }
 
 /* 渐变（报告 §3：仅用于背景与数据端点） */
-.bg-gradient {
-  background: linear-gradient(160deg, #04121F 0%, var(--void) 60%, #01020A 100%);
-}
+.bg-gradient { background: transparent; }
 
 /* 标题（报告 §2：一律 900 极粗，字距随字号递减） */
 .h-hero {
@@ -3664,4 +3662,18 @@ body.nav-locked { overflow: hidden; }
    改為單欄，讓標語獨佔全寬。 */
 @media (max-width: 960px) {
   .mn-hero__inner { grid-template-columns: 1fr; }
+}
+
+/* siteHalo1: transparent dark plates so Halo shows through on all pages */
+body.has-halo-bg {
+  background: transparent;
+}
+body.has-halo-bg .bg-night,
+body.has-halo-bg .bg-deep,
+body.has-halo-bg .bg-slate,
+body.has-halo-bg .bg-graphite,
+body.has-halo-bg .page-head,
+body.has-halo-bg .page-header,
+body.has-halo-bg .cta-band {
+  background: transparent;
 }

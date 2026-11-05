@@ -9,9 +9,19 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;600;700;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="assets/css/style.css">
+<link rel="stylesheet" href="assets/css/style.css?v=siteHalo1">
+<link rel="stylesheet" href="assets/css/halo-bg.css?v=siteHalo1">
 </head>
-<body>
+<body class="has-halo-bg">
+
+<!--
+  HALOFLUX background — HALOFLUX by Ryder191 (RYDER CODE / Ms MAIKEBAIs CAT)
+  https://github.com/Ryder191/haloflux
+  Required Notice: Copyright (c) 2026 Ryder191 (RYDER CODE / Ms MAIKEBAIs CAT) - https://github.com/Ryder191/haloflux
+  Required Notice: Noncommercial use only. PolyForm Noncommercial 1.0.0 — see assets/NOTICE-haloflux.txt
+  Toggle off: ?halo=0  |  localStorage.obsidian_halo_bg='0'  |  window.__OBSIDIAN_HALO__=false
+-->
+<canvas id="halo-bg" aria-hidden="true"></canvas>
 <a class="skip-link" href="#main">跳至主要內容</a>
 
 <canvas id="particles" aria-hidden="true"></canvas>
@@ -145,6 +155,31 @@
 </footer>
 
 <div class="toast" role="status" aria-live="polite"></div>
+<script>
+/* Halo gate — must run BEFORE main.js so #particles can be renamed in time */
+(function () {
+  var off = false;
+  try { if (window.__OBSIDIAN_HALO__ === false) off = true; } catch (e) {}
+  try { if (localStorage.getItem('obsidian_halo_bg') === '0') off = true; } catch (e) {}
+  if (/[?&]halo=0(?:&|$)/.test(location.search || '')) off = true;
+  window.__OBSIDIAN_HALO_OFF__ = off;
+  if (off) {
+    document.body.classList.remove('has-halo-bg');
+    document.body.classList.add('halo-bg-off');
+    var h = document.getElementById('halo-bg');
+    if (h) { h.setAttribute('hidden', ''); h.style.display = 'none'; }
+    return;
+  }
+  var p = document.getElementById('particles');
+  if (p) {
+    p.id = 'particles-off';
+    p.setAttribute('hidden', '');
+  }
+})();
+</script>
 <script src="assets/js/main.js"></script>
+<script src="assets/js/haloflux-engine.js?v=glowOff1"></script>
+<script src="assets/js/halo-bg.js?v=glowOff1"></script>
+
 </body>
 </html>
