@@ -3683,7 +3683,15 @@ body.has-halo-bg .cta-band {
    Keep the desktop composition; simplify spacing and controls on small screens.
    ========================================================================== */
 @media (max-width: 960px) {
-  :root { --nav-main: 64px; }
+  :root { --nav-main: 64px; --nav-total: 92px; }
+
+  /* Keep the menu panel above page content but directly under the header. */
+  .nav {
+    z-index: 1000;
+    background: var(--void);
+    height: calc(100dvh - var(--nav-total));
+    min-height: 0;
+  }
 
   /* Fixed navigation must fit both the brand and account actions at 320px. */
   .site-header__inner { gap: var(--s3); }
