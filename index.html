@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
+  <!-- actOff1 -->
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>曜石 | 讓每台設備可靠連接</title>
@@ -9,7 +11,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="assets/css/style.css">
+<link rel="stylesheet" href="assets/css/style.css?v=bgTrans1">
+<link rel="stylesheet" href="assets/css/halo-bg.css?v=glowOff1">
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
@@ -22,10 +25,20 @@
 }
 </script>
 </head>
-<body>
+<body class="has-halo-bg">
 <a class="skip-link" href="#main">跳至主要內容</a>
 
-<!-- 報告 §6.1：CANVAS#particles → DIV.ann-bar → HEADER → ... → FOOTER -->
+<!--
+  HALOFLUX background (homepage only) — HALOFLUX by Ryder191 (RYDER CODE / Ms MAIKEBAIs CAT)
+  https://github.com/Ryder191/haloflux
+  Required Notice: Copyright (c) 2026 Ryder191 (RYDER CODE / Ms MAIKEBAIs CAT) - https://github.com/Ryder191/haloflux
+  Required Notice: Noncommercial use only. PolyForm Noncommercial 1.0.0 — see assets/NOTICE-haloflux.txt
+  Toggle off: ?halo=0  |  localStorage.obsidian_halo_bg='0'  |  window.__OBSIDIAN_HALO__=false
+-->
+<canvas id="halo-bg" aria-hidden="true"></canvas>
+
+<!-- 報告 §6.1：CANVAS#particles → DIV.ann-bar → HEADER → ... → FOOTER
+     When Halo is active, an early script renames this to #particles-off so main.js skips it. -->
 <canvas id="particles" aria-hidden="true"></canvas>
 
 <div class="ann-bar">
@@ -157,9 +170,7 @@
       <div class="hero-left">
         <div class="hero-accent" aria-hidden="true"></div>
         <p class="hero-eyebrow">IoT Hardware &amp; Edge Gateway</p>
-        <h2 class="hero-title-zh">讓每台設備<br>可靠連接</h2>
         <p class="hero-title-en">OBSIDIAN Technologies</p>
-        <p class="hero-tagline">可靠，從每一台設備開始</p>
         <div class="hero-rule" aria-hidden="true"></div>
         <p class="hero-desc">
           專注工業與家用物聯網，提供感測、邊緣網關與能耗管理三條產品線。
@@ -512,7 +523,31 @@
 
 <div class="toast" role="status" aria-live="polite"></div>
 
+<script>
+/* Halo gate — must run BEFORE main.js so #particles can be renamed in time */
+(function () {
+  var off = false;
+  try { if (window.__OBSIDIAN_HALO__ === false) off = true; } catch (e) {}
+  try { if (localStorage.getItem('obsidian_halo_bg') === '0') off = true; } catch (e) {}
+  if (/[?&]halo=0(?:&|$)/.test(location.search || '')) off = true;
+  window.__OBSIDIAN_HALO_OFF__ = off;
+  if (off) {
+    document.body.classList.remove('has-halo-bg');
+    document.body.classList.add('halo-bg-off');
+    var h = document.getElementById('halo-bg');
+    if (h) { h.setAttribute('hidden', ''); h.style.display = 'none'; }
+    return;
+  }
+  var p = document.getElementById('particles');
+  if (p) {
+    p.id = 'particles-off';
+    p.setAttribute('hidden', '');
+  }
+})();
+</script>
 <script src="assets/js/main.js"></script>
+<script src="assets/js/haloflux-engine.js?v=glowOff1"></script>
+<script src="assets/js/halo-bg.js?v=glowOff1"></script>
 <script>
 /* 新聞頻道資料（報告 §6.4：4 頻道，每頻道獨立 ticker） */
 window.OBSIDIAN_NEWS = {
@@ -588,5 +623,6 @@ window.OBSIDIAN_NEWS = {
   }).join('');
 })();
 </script>
+
 </body>
 </html>
