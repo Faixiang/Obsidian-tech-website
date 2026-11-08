@@ -656,17 +656,26 @@
   bg.className = 'obsidian-bg';
   bg.setAttribute('aria-hidden', 'true');
 
-  /* a. 霧狀光暈 ×3 */
+  /* a. 霧狀光暈 ×3 —— 獨立成 .obsidian-glows，附加在 body 末端，
+     使其疊在背景影片之上（首頁影片牆）、但仍低於內容（.section z-index:1）。 */
   bg.innerHTML =
-    '<div class="obsidian-bg__glow obsidian-bg__glow--a"></div>' +
-    '<div class="obsidian-bg__glow obsidian-bg__glow--b"></div>' +
-    '<div class="obsidian-bg__glow obsidian-bg__glow--c"></div>' +
     '<div class="obsidian-bg__grid"></div>' +
     '<canvas class="obsidian-bg__canvas"></canvas>' +
     '<div class="obsidian-bg__noise"></div>' +
     '<div class="obsidian-bg__vignette"></div>';
 
   document.body.insertBefore(bg, document.body.firstChild);
+
+  if (!document.querySelector('.obsidian-glows')) {
+    var glows = document.createElement('div');
+    glows.className = 'obsidian-glows';
+    glows.setAttribute('aria-hidden', 'true');
+    glows.innerHTML =
+      '<div class="obsidian-bg__glow obsidian-bg__glow--a"></div>' +
+      '<div class="obsidian-bg__glow obsidian-bg__glow--b"></div>' +
+      '<div class="obsidian-bg__glow obsidian-bg__glow--c"></div>';
+    document.body.appendChild(glows);
+  }
 
   var canvas = bg.querySelector('.obsidian-bg__canvas');
   var ctx = canvas.getContext('2d');
@@ -1115,6 +1124,7 @@
       var sa = document.createElement('a');
       sa.href = '#' + sections[s].id;
       sa.textContent = sections[s].label;
+      sa.setAttribute('title', sections[s].label);   /* 截斷時可看到全文 */
       sa.setAttribute('data-rail-anchor', sections[s].id);
       sli.appendChild(sa);
       secList.appendChild(sli);

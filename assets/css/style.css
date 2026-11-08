@@ -3499,6 +3499,14 @@ body.nav-locked { overflow: hidden; }
   transform: translateY(-50%);
   z-index: 900;              /* 低於 header 的 1001 */
   display: none;
+  /* 統一尺寸：不再由內容撐開（否則寬度取最長標籤、高度取章節數量，
+     各頁會有長有短）。固定寬高 + 內容頂端對齊，使每頁的頁面導航
+     都從同一個 y 位置開始，章節不足時底部留空（rail 無底色，看不見）。 */
+  width: 180px;
+  height: 480px;
+  box-sizing: border-box;
+  flex-direction: column;
+  justify-content: flex-start;
   max-height: 82vh;
   overflow-y: auto;
   scrollbar-width: none;
@@ -3506,12 +3514,17 @@ body.nav-locked { overflow: hidden; }
 
 .rail::-webkit-scrollbar { display: none; }
 
-/* 顯示 rail 需視口 >= 1536px：rail 佔 28px 邊距 + 123px 寬度，
-   container 1200px 居中後需 (視口-1200)/2 >= 151px 才不重疊。
-   1281–1535px 區間回退為 header 橫排導航，避免遮擋內容。 */
-@media (min-width: 1536px) {
-  .js-ready .rail { display: block; }
+/* 顯示 rail 需視口 ≥1600px（rail 180px + 28px 邊距，container 1200px
+   居中後兩側各留 (視口-1200)/2，1600px 時為 200px，容得下 188px）。
+   1600–1759px 用 160px 窄版，≥1760px 用 180px。
+   <1600px 回退為 header 橫排導航，避免遮擋內容。 */
+@media (min-width: 1600px) {
+  .js-ready .rail { display: flex; }
   .js-ready .nav { display: none; }
+}
+
+@media (min-width: 1600px) and (max-width: 1759px) {
+  .js-ready .rail { width: 160px; }
 }
 
 /* --- 頁面導航項 --- */
@@ -3534,6 +3547,11 @@ body.nav-locked { overflow: hidden; }
   padding: var(--s2) 0 var(--s2) var(--s4);
   color: rgba(245, 245, 245, 0.72);
   text-decoration: none;
+  /* 固定寬度下，超長標籤（如新聞標題）改為單行截斷，
+     完整文字由 JS 寫入 title 屬性作為 tooltip */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
   transition: color 0.3s ease, transform 0.3s ease;
 }
 
@@ -3824,4 +3842,125 @@ body.has-halo-bg .cta-band {
   .brand img { height: 25px; }
   .hdr-actions .btn { padding-inline: 8px; }
   .hdr-cart { width: 28px; }
+}
+
+/* ==========================================================================
+   首頁網格遮罩層（index.html）
+   --------------------------------------------------------------------------
+   .obsidian-bg 整體在 z-index:0 且為獨立堆疊上下文，其內的網格無法超過
+   影片牆。因此在首頁額外注入一層同款網格，位於影片牆之後（DOM 順序更後，
+   同 z-index 下即畫在上方），但仍在內容（.section z-index:1）之下。
+   ========================================================================== */
+.grid-overlay {
+  position: fixed;
+  inset: -80px 0 0;
+  z-index: 0;
+  pointer-events: none;
+  background-image:
+    linear-gradient(rgba(0, 212, 184, 0.055) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 212, 184, 0.055) 1px, transparent 1px);
+  background-size: 80px 80px;
+  animation: mnGrid 28s linear infinite;
+}
+
+/* 霧狀光暈層（由 main.js 附加於 body 末端）
+   同 z-index:0 但 DOM 更後 → 畫在背景影片與網格之上，仍低於內容 */
+.obsidian-glows {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .grid-overlay {
+    animation: none !important;
+    transform: none !important;
+  }
+}
+
+/* ==========================================================================
+   首頁背景影片牆（index.html）
+   --------------------------------------------------------------------------
+   要求：每條影片保持原生比例、完整不裁切，同時鋪滿視口。
+   做法：由 index.html 的 inline 腳本按各影片的 aspect ratio 計算
+         「justified rows」（每列依比例填滿寬度），再對整牆做等比縮放
+         使高度剛好等於視口高度（只會在頁面最外圍邊缘修掉幾 px）。
+   本層不加 blur / 遮罩 / 透明度 / filter。
+   ========================================================================== */
+.hero-video-bg {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+  background: var(--void);
+  /* 排版完成前不顯示：避免使用者看到「影片直排 → 拼成馬赛克」的過程。
+     腳本緊接在標記之後同步執行，第一次繪製前就會加上 .is-ready。 */
+  opacity: 0;
+}
+
+.hero-video-bg.is-ready {
+  opacity: 1;
+}
+
+.hero-video-bg__row {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  transform: translate(-50%, -50%);
+  transform-origin: center center;
+  will-change: transform;
+}
+
+/* 每一列：由 JS 注入，寬度 100%，高度由影片比例決定 */
+.hero-video-bg__line {
+  display: flex;
+  width: 100%;
+  flex: 0 0 auto;
+}
+
+/* 影片：寬度由 JS 按比例寫入，高度自動 → 永遠不裁切、不變形 */
+.hero-video-bg__item {
+  display: block;
+  flex: 0 0 auto;
+  height: auto;
+  min-width: 0;
+  opacity: 0.6;   /* 累計降低 40%（10% + 15% + 15%） */
+}
+
+
+/* 減少動效偏好：直接不播放（隱藏圖層，退回原有背景） */
+@media (prefers-reduced-motion: reduce) {
+  .hero-video-bg { display: none; }
+}
+
+/* ==========================================================================
+   全站段落文字統一白色（最後一層覆蓋）
+   --------------------------------------------------------------------------
+   需求：所有 <p> 的文字改為白色。
+   各元件（.caption / .card__text / .body-text …）原本各自指定銀灰，
+   其 class 特異度高於元素選擇器 p，因此這裡必須用 !important 才能統一覆蓋。
+
+   唯一例外：.bg-cloud 近白底（#F5F7FA）區塊若用白字會完全看不見，
+   保留深色 --cloud-fg，兼顧可讀性與 WCAG。
+   ========================================================================== */
+p {
+  color: var(--white) !important;
+}
+
+/* 淺底區塊內的段落維持深色，避免白字壓在近白底上 */
+.bg-cloud p,
+.bg-cloud .card__text,
+.bg-cloud .caption,
+.bg-cloud .body-text,
+.bg-cloud .feature__text,
+.bg-cloud .tick-list li,
+.bg-cloud .spec-row__val,
+.bg-cloud .spec-row__key {
+  color: var(--cloud-fg) !important;
 }

@@ -9,22 +9,190 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;600;700;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="assets/css/style.css?v=mobile2">
-<link rel="stylesheet" href="assets/css/halo-bg.css?v=siteHalo1">
+<link rel="stylesheet" href="assets/css/style.css?v=whiteP1">
+<link rel="stylesheet" href="assets/css/halo-bg.css?v=noHalo1">
 </head>
 <body class="has-halo-bg">
 
-<!--
-  HALOFLUX background — HALOFLUX by Ryder191 (RYDER CODE / Ms MAIKEBAIs CAT)
-  https://github.com/Ryder191/haloflux
-  Required Notice: Copyright (c) 2026 Ryder191 (RYDER CODE / Ms MAIKEBAIs CAT) - https://github.com/Ryder191/haloflux
-  Required Notice: Noncommercial use only. PolyForm Noncommercial 1.0.0 — see assets/NOTICE-haloflux.txt
-  Toggle off: ?halo=0  |  localStorage.obsidian_halo_bg='0'  |  window.__OBSIDIAN_HALO__=false
--->
-<canvas id="halo-bg" aria-hidden="true"></canvas>
 <a class="skip-link" href="#main">跳至主要內容</a>
 
 <canvas id="particles" aria-hidden="true"></canvas>
+
+<!-- 首頁背景影片牆 · 素材：X @poetengineer__（每條保持完整比例，可放大，由腳本排版） -->
+<div class="hero-video-bg" aria-hidden="true">
+  <div class="hero-video-bg__row">
+    <video class="hero-video-bg__item" muted loop playsinline autoplay preload="none"
+           poster="assets/video/bg-poster-2.jpg" data-ar="1.475">
+      <source src="assets/video/bg-loop-2.mp4" type="video/mp4">
+    </video>
+    <video class="hero-video-bg__item" muted loop playsinline autoplay preload="none"
+           poster="assets/video/bg-poster-8.jpg" data-ar="0.7627">
+      <source src="assets/video/bg-loop-8.mp4" type="video/mp4">
+    </video>
+    <video class="hero-video-bg__item" muted loop playsinline autoplay preload="none"
+           poster="assets/video/bg-poster.jpg" data-ar="1">
+      <source src="assets/video/bg-loop.mp4" type="video/mp4">
+    </video>
+    <video class="hero-video-bg__item" muted loop playsinline autoplay preload="none"
+           poster="assets/video/bg-poster-3.jpg" data-ar="1">
+      <source src="assets/video/bg-loop-3.mp4" type="video/mp4">
+    </video>
+    <video class="hero-video-bg__item" muted loop playsinline autoplay preload="none"
+           poster="assets/video/bg-poster-4.jpg" data-ar="1">
+      <source src="assets/video/bg-loop-4.mp4" type="video/mp4">
+    </video>
+    <video class="hero-video-bg__item" muted loop playsinline autoplay preload="none"
+           poster="assets/video/bg-poster-5.jpg" data-ar="1">
+      <source src="assets/video/bg-loop-5.mp4" type="video/mp4">
+    </video>
+    <video class="hero-video-bg__item" muted loop playsinline autoplay preload="none"
+           poster="assets/video/bg-poster-6.jpg" data-ar="1">
+      <source src="assets/video/bg-loop-6.mp4" type="video/mp4">
+    </video>
+    <video class="hero-video-bg__item" muted loop playsinline autoplay preload="none"
+           poster="assets/video/bg-poster-7.jpg" data-ar="1">
+      <source src="assets/video/bg-loop-7.mp4" type="video/mp4">
+    </video>
+    <video class="hero-video-bg__item" muted loop playsinline autoplay preload="none"
+           poster="assets/video/bg-poster-9.jpg" data-ar="1">
+      <source src="assets/video/bg-loop-9.mp4" type="video/mp4">
+    </video>
+  </div>
+</div>
+
+<!-- 網格遮罩：壓在所有背景影片之上、內容之下 -->
+<div class="grid-overlay" aria-hidden="true"></div>
+
+<script>
+/* 背景影片牆排版
+   ------------------------------------------------------------------
+   目標：每條影片保持原生比例（完整不裁切，可放大），同時鋪滿視口。
+   做法：
+     1. 把影片分成若干「列」，每列依各片 aspect ratio 分配寬度（加總 100%），
+        所以列內永遠不裁切、不變形。
+     2. 列高 = 列寬 ÷ 列內 aspect 總和；整牆高度為各列高之和 Ht。
+     3. 對整牆等比縮放 max(1, H/Ht)，使高度恰好填滿視口。
+   防跳動（重點）：
+     - 本腳本緊接影片牆標記，於解析階段同步執行，早於第一次繪製；
+       因此瀏覽器第一次畫出來就是最終版面，不會看到「直排 → 拼接」的過程。
+     - CSS 預設 .hero-video-bg { opacity: 0 }，排版完成後才加 .is-ready 顯示。
+     - 不再於 metadata 到齊後重排（data-ar 已是準確比例），避免二次跳動。
+     - 分列結果按視窗尺寸快取於 sessionStorage，跨頁／回上頁直接沿用。
+*/
+(function heroVideoWall() {
+  'use strict';
+
+  var box = document.querySelector('.hero-video-bg');
+  var wall = document.querySelector('.hero-video-bg__row');
+  if (!box || !wall) return;
+
+  var vids = Array.prototype.slice.call(wall.querySelectorAll('.hero-video-bg__item'));
+  if (!vids.length) return;
+
+  function arOf(v) {
+    if (v.videoWidth && v.videoHeight) return v.videoWidth / v.videoHeight;
+    return parseFloat(v.dataset.ar) || 1;
+  }
+
+  var lastKey = null;
+
+  function groupsFromCache(key) {
+    try {
+      var raw = sessionStorage.getItem('obsidian_wall_v1_' + key);
+      if (!raw) return null;
+      var g = JSON.parse(raw);
+      return (g && g.length) ? g : null;
+    } catch (e) { return null; }
+  }
+
+  function layout() {
+    var W = window.innerWidth;
+    var H = window.innerHeight;
+    var key = W + 'x' + H;
+    if (key === lastKey) return;
+    lastKey = key;
+
+    var ar = vids.map(arOf);
+    var n = ar.length;
+
+    var groups = groupsFromCache(key);
+
+    if (!groups) {
+      /* 穷舉所有「連續分段」＋所有旋轉，挑 |Ht - H| 最小者 */
+      var bestErr = Infinity;
+      for (var rot = 0; rot < n; rot++) {
+        var order = [];
+        for (var i = 0; i < n; i++) order.push((rot + i) % n);
+
+        for (var mask = 0; mask < (1 << (n - 1)); mask++) {
+          var gs = [];
+          var cur = [order[0]];
+          for (var j = 1; j < n; j++) {
+            if (mask & (1 << (j - 1))) { gs.push(cur); cur = [order[j]]; }
+            else cur.push(order[j]);
+          }
+          gs.push(cur);
+
+          var sumInv = 0;
+          for (var g = 0; g < gs.length; g++) {
+            var s = 0;
+            for (var k = 0; k < gs[g].length; k++) s += ar[gs[g][k]];
+            sumInv += 1 / s;
+          }
+          var err = Math.abs(W * sumInv - H);
+          if (err < bestErr) { bestErr = err; groups = gs; }
+        }
+      }
+      if (!groups) return;
+      try { sessionStorage.setItem('obsidian_wall_v1_' + key, JSON.stringify(groups)); } catch (e) {}
+    }
+
+    /* 縮放係數：任何情況下都重算（含快取命中），+0.002 補次像素捨入 */
+    var inv = 0;
+    groups.forEach(function (g) {
+      var s = 0;
+      g.forEach(function (i) { s += ar[i]; });
+      inv += 1 / s;
+    });
+    var k = Math.max(1, H / (W * inv) + 0.002);
+    wall.style.transform = 'translate(-50%, -50%) scale(' + k.toFixed(4) + ')';
+
+    /* 重建列（僅在分組變動時，避免重複搬動節點） */
+    var sig = JSON.stringify(groups);
+    if (wall.dataset.sig !== sig) {
+      while (wall.firstChild) wall.removeChild(wall.firstChild);
+
+      groups.forEach(function (g) {
+        var line = document.createElement('div');
+        line.className = 'hero-video-bg__line';
+
+        var sum = 0;
+        g.forEach(function (i) { sum += ar[i]; });
+
+        g.forEach(function (i) {
+          var v = vids[i];
+          v.style.width = (ar[i] / sum * 100) + '%';
+          v.style.height = 'auto';
+          line.appendChild(v);
+        });
+
+        wall.appendChild(line);
+      });
+      wall.dataset.sig = sig;
+    }
+  }
+
+  layout();
+  box.classList.add('is-ready');   /* 版面就緒，才顯示 */
+
+  var t;
+  window.addEventListener('resize', function () {
+    clearTimeout(t);
+    t = setTimeout(layout, 150);
+  });
+})();
+</script>
+
 
 <div class="ann-bar">
   <div class="ann-bar__track">
@@ -238,30 +406,34 @@
 <div class="toast" role="status" aria-live="polite"></div>
 
 <script>
-/* Halo gate — must run BEFORE main.js so #particles can be renamed in time */
+/* Background: .obsidian-bg is injected by main.js (CSS layers only).
+   Keep the legacy #particles canvas inert so only one rAF loop runs. */
 (function () {
-  var off = false;
-  try { if (window.__OBSIDIAN_HALO__ === false) off = true; } catch (e) {}
-  try { if (localStorage.getItem('obsidian_halo_bg') === '0') off = true; } catch (e) {}
-  if (/[?&]halo=0(?:&|$)/.test(location.search || '')) off = true;
-  window.__OBSIDIAN_HALO_OFF__ = off;
-  if (off) {
-    document.body.classList.remove('has-halo-bg');
-    document.body.classList.add('halo-bg-off');
-    var h = document.getElementById('halo-bg');
-    if (h) { h.setAttribute('hidden', ''); h.style.display = 'none'; }
-    return;
-  }
-  var p = document.getElementById('particles');
-  if (p) {
-    p.id = 'particles-off';
-    p.setAttribute('hidden', '');
-  }
+  var p = document.getElementById("particles");
+  if (p) { p.id = "particles-off"; p.setAttribute("hidden", ""); }
 })();
 </script>
-<script src="assets/js/main.js"></script>
-<script src="assets/js/haloflux-engine.js?v=glowOff1"></script>
-<script src="assets/js/halo-bg.js?v=glowOff1"></script>
+<script>
+/* 首頁背景影片：減少動效偏好下不播放；切換分頁時暫停，避免後台空耗 */
+(function () {
+  var vids = document.querySelectorAll('.hero-video-bg video');
+  if (!vids.length) return;
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  function playAll() {
+    Array.prototype.forEach.call(vids, function (v) {
+      v.play().catch(function () { /* 自動播放被攔截時保留海報圖 */ });
+    });
+  }
+  playAll();
+  document.addEventListener('visibilitychange', function () {
+    Array.prototype.forEach.call(vids, function (v) {
+      if (document.hidden) { v.pause(); }
+      else { v.play().catch(function () {}); }
+    });
+  });
+})();
+</script>
+<script src="assets/js/main.js?v=railFix1"></script>
 
 <script src="assets/js/auth.js"></script>
 <script>
