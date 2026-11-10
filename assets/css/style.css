@@ -3905,6 +3905,15 @@ body.has-halo-bg .cta-band {
   opacity: 1;
 }
 
+/* 章節切換重排時的淡出／淡入掩護（避免看到 DOM 重組的硬跳） */
+.hero-video-bg {
+  transition: opacity 0.38s ease;
+}
+
+.hero-video-bg.is-shuffling {
+  opacity: 0.12;
+}
+
 .hero-video-bg__row {
   position: absolute;
   top: 50%;
@@ -3940,27 +3949,85 @@ body.has-halo-bg .cta-band {
 }
 
 /* ==========================================================================
-   全站段落文字統一白色（最後一層覆蓋）
+   全站正文文字統一白色（最後一層覆蓋）
    --------------------------------------------------------------------------
-   需求：所有 <p> 的文字改為白色。
-   各元件（.caption / .card__text / .body-text …）原本各自指定銀灰，
-   其 class 特異度高於元素選擇器 p，因此這裡必須用 !important 才能統一覆蓋。
+   需求：頁面正文全面转白。
+   注意：各頁正文的標籤并不统一 —— 首頁多數在 <p>，但內頁大量使用
+   <td>（表格）/ <li>（列表）/ <span class="spec-row__val">（規格值）/
+   <span class="caption">（說明），那些元素各自有銀灰 color。
+   因此這裡除了 p，也一並涵蓋這些承載正文的元素（用 !important 突破 class 特異度）。
 
-   唯一例外：.bg-cloud 近白底（#F5F7FA）區塊若用白字會完全看不見，
-   保留深色 --cloud-fg，兼顧可讀性與 WCAG。
+   刻意不動：品牌強調色（青 --cyan、紫 --purple-bright、金 --gold、
+   狀態色）與 .badge / .tag / .price / .section-label 等裝飾元素。
+
+   例外：.bg-cloud 近白底（#F5F7FA）區塊用白字會完全看不見，
+   保留深色 --cloud-fg。
    ========================================================================== */
-p {
+p,
+li,
+td,
+th,
+dd,
+dt,
+blockquote,
+.caption,
+.body-text,
+.body-muted,
+.card__text,
+.card__desc,
+.div-desc,
+.feature__text,
+.acc__text,
+.nb-lead-desc,
+.nb-item-date,
+.nb-item-title,
+.broadcast__date,
+.broadcast__title,
+.spec-row__key,
+.spec-row__val,
+.spec__key,
+.spec__val,
+.timeline__text,
+.field__hint,
+.ft-desc,
+.ft-col a,
+.price__unit,
+.acc__panel .caption {
   color: var(--white) !important;
 }
 
-/* 淺底區塊內的段落維持深色，避免白字壓在近白底上 */
+/* 淺底區塊內的正文維持深色，避免白字壓在近白底上 */
 .bg-cloud p,
-.bg-cloud .card__text,
+.bg-cloud li,
+.bg-cloud td,
+/* 注意：只有 thead th 自帶深色底（.table thead th → --void3）必須留白字；
+   tbody / tfoot 的 th 底色透明，在淺底上必須轉深色，否則是白字壓白底。 */
+.bg-cloud .table tbody th,
+.bg-cloud .table tfoot th,
+.bg-cloud dd,
+.bg-cloud dt,
+.bg-cloud blockquote,
 .bg-cloud .caption,
 .bg-cloud .body-text,
+.bg-cloud .body-muted,
+.bg-cloud .card__text,
+.bg-cloud .card__desc,
+.bg-cloud .div-desc,
 .bg-cloud .feature__text,
-.bg-cloud .tick-list li,
+.bg-cloud .acc__text,
+.bg-cloud .nb-lead-desc,
+.bg-cloud .nb-item-date,
+.bg-cloud .nb-item-title,
+.bg-cloud .broadcast__date,
+.bg-cloud .broadcast__title,
+.bg-cloud .spec-row__key,
 .bg-cloud .spec-row__val,
-.bg-cloud .spec-row__key {
+.bg-cloud .spec__key,
+.bg-cloud .spec__val,
+.bg-cloud .timeline__text,
+.bg-cloud .field__hint,
+.bg-cloud .ft-desc,
+.bg-cloud .ft-col a,
+.bg-cloud .acc__panel .caption {
   color: var(--cloud-fg) !important;
 }

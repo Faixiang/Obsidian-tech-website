@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;600;700;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="assets/css/style.css?v=whiteP1">
+<link rel="stylesheet" href="assets/css/style.css?v=whiteAll3">
 <link rel="stylesheet" href="assets/css/halo-bg.css?v=noHalo1">
 </head>
 <body class="has-halo-bg">
@@ -64,20 +64,23 @@
 <div class="grid-overlay" aria-hidden="true"></div>
 
 <script>
-/* 背景影片牆排版
+/* 背景影片牆排版 + 章節聯動重排
    ------------------------------------------------------------------
-   目標：每條影片保持原生比例（完整不裁切，可放大），同時鋪滿視口。
-   做法：
-     1. 把影片分成若干「列」，每列依各片 aspect ratio 分配寬度（加總 100%），
-        所以列內永遠不裁切、不變形。
-     2. 列高 = 列寬 ÷ 列內 aspect 總和；整牆高度為各列高之和 Ht。
-     3. 對整牆等比縮放 max(1, H/Ht)，使高度恰好填滿視口。
-   防跳動（重點）：
-     - 本腳本緊接影片牆標記，於解析階段同步執行，早於第一次繪製；
-       因此瀏覽器第一次畫出來就是最終版面，不會看到「直排 → 拼接」的過程。
-     - CSS 預設 .hero-video-bg { opacity: 0 }，排版完成後才加 .is-ready 顯示。
-     - 不再於 metadata 到齊後重排（data-ar 已是準確比例），避免二次跳動。
-     - 分列結果按視窗尺寸快取於 sessionStorage，跨頁／回上頁直接沿用。
+   排版：
+     1. 影片切成若干「列」，列內按各片 aspect ratio 分配寬度（加總 100%），
+        故列內永不裁切、不變形。
+     2. 列高 = 列寬 ÷ 列內比例總和；整牆自然高 Ht = 各列高之和。
+     3. 整牆等比縮放 max(1, H/Ht) 使高度填滿視口（+0.002 補次像素）。
+     4. 分列方式穷舉（256 分段 × n 旋轉）挑最接近視口高度者。
+   防跳動：
+     - 腳本緊接影片牆標記，解析階段同步執行，早於第一次繪製。
+     - CSS 預設 .hero-video-bg { opacity: 0 }，就緒後加 .is-ready。
+     - 分列結果按「視窗尺寸 + 排列簽名」快取於 sessionStorage。
+   章節聯動（新增）：
+     - 以捲動位置判斷目前落在哪個 <section>（取視口中線所屬者）。
+     - 跨到新分段時，隨機打亂影片順序並重新分列 → 背景「隨機移動」。
+     - 過程用 .is-shuffling 淡出／淡入掩護 DOM 重組，避免硬跳；
+       prefers-reduced-motion 下不做任何重排。
 */
 (function heroVideoWall() {
   'use strict';
@@ -89,109 +92,217 @@
   var vids = Array.prototype.slice.call(wall.querySelectorAll('.hero-video-bg__item'));
   if (!vids.length) return;
 
+  var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
   function arOf(v) {
     if (v.videoWidth && v.videoHeight) return v.videoWidth / v.videoHeight;
     return parseFloat(v.dataset.ar) || 1;
   }
 
+  var AR = vids.map(arOf);
+  var N = AR.length;
+  var perm = AR.map(function (_, i) { return i; });   /* 目前排列順序 */
   var lastKey = null;
 
-  function groupsFromCache(key) {
+  function permSig() { return perm.join('-'); }
+
+  function cacheGet(key) {
     try {
-      var raw = sessionStorage.getItem('obsidian_wall_v1_' + key);
+      var raw = sessionStorage.getItem('obsidian_wall_v2_' + key);
       if (!raw) return null;
       var g = JSON.parse(raw);
       return (g && g.length) ? g : null;
     } catch (e) { return null; }
   }
 
-  function layout() {
+  function cacheSet(key, groups) {
+    try { sessionStorage.setItem('obsidian_wall_v2_' + key, JSON.stringify(groups)); } catch (e) {}
+  }
+
+  /* 穷舉：把 perm 序列切成「連續段」，各段成列 */
+  function computeGroups(W, H) {
+    var bestErr = Infinity;
+    var best = null;
+
+    for (var rot = 0; rot < N; rot++) {
+      var order = [];
+      for (var i = 0; i < N; i++) order.push(perm[(rot + i) % N]);
+
+      for (var mask = 0; mask < (1 << (N - 1)); mask++) {
+        var gs = [];
+        var cur = [order[0]];
+        for (var j = 1; j < N; j++) {
+          if (mask & (1 << (j - 1))) { gs.push(cur); cur = [order[j]]; }
+          else cur.push(order[j]);
+        }
+        gs.push(cur);
+
+        var inv = 0;
+        for (var g = 0; g < gs.length; g++) {
+          var s = 0;
+          for (var k = 0; k < gs[g].length; k++) s += AR[gs[g][k]];
+          inv += 1 / s;
+        }
+        var err = Math.abs(W * inv - H);
+        if (err < bestErr) { bestErr = err; best = gs; }
+      }
+    }
+    return best;
+  }
+
+  function render(groups) {
+    var sig = JSON.stringify(groups);
+    if (wall.dataset.sig === sig) return;
+    wall.dataset.sig = sig;
+
+    while (wall.firstChild) wall.removeChild(wall.firstChild);
+
+    groups.forEach(function (g) {
+      var line = document.createElement('div');
+      line.className = 'hero-video-bg__line';
+
+      var sum = 0;
+      g.forEach(function (i) { sum += AR[i]; });
+
+      g.forEach(function (i) {
+        var v = vids[i];
+        v.style.width = (AR[i] / sum * 100) + '%';
+        v.style.height = 'auto';
+        line.appendChild(v);
+      });
+
+      wall.appendChild(line);
+    });
+  }
+
+  function layout(force) {
     var W = window.innerWidth;
     var H = window.innerHeight;
-    var key = W + 'x' + H;
-    if (key === lastKey) return;
+    var key = W + 'x' + H + '|' + permSig();
+    if (!force && key === lastKey) return;
     lastKey = key;
 
-    var ar = vids.map(arOf);
-    var n = ar.length;
-
-    var groups = groupsFromCache(key);
-
+    var groups = cacheGet(key);
     if (!groups) {
-      /* 穷舉所有「連續分段」＋所有旋轉，挑 |Ht - H| 最小者 */
-      var bestErr = Infinity;
-      for (var rot = 0; rot < n; rot++) {
-        var order = [];
-        for (var i = 0; i < n; i++) order.push((rot + i) % n);
-
-        for (var mask = 0; mask < (1 << (n - 1)); mask++) {
-          var gs = [];
-          var cur = [order[0]];
-          for (var j = 1; j < n; j++) {
-            if (mask & (1 << (j - 1))) { gs.push(cur); cur = [order[j]]; }
-            else cur.push(order[j]);
-          }
-          gs.push(cur);
-
-          var sumInv = 0;
-          for (var g = 0; g < gs.length; g++) {
-            var s = 0;
-            for (var k = 0; k < gs[g].length; k++) s += ar[gs[g][k]];
-            sumInv += 1 / s;
-          }
-          var err = Math.abs(W * sumInv - H);
-          if (err < bestErr) { bestErr = err; groups = gs; }
-        }
-      }
+      groups = computeGroups(W, H);
       if (!groups) return;
-      try { sessionStorage.setItem('obsidian_wall_v1_' + key, JSON.stringify(groups)); } catch (e) {}
+      cacheSet(key, groups);
     }
 
-    /* 縮放係數：任何情況下都重算（含快取命中），+0.002 補次像素捨入 */
+    /* 縮放係數：任何情況都重算（含快取命中） */
     var inv = 0;
     groups.forEach(function (g) {
       var s = 0;
-      g.forEach(function (i) { s += ar[i]; });
+      g.forEach(function (i) { s += AR[i]; });
       inv += 1 / s;
     });
     var k = Math.max(1, H / (W * inv) + 0.002);
     wall.style.transform = 'translate(-50%, -50%) scale(' + k.toFixed(4) + ')';
 
-    /* 重建列（僅在分組變動時，避免重複搬動節點） */
-    var sig = JSON.stringify(groups);
-    if (wall.dataset.sig !== sig) {
-      while (wall.firstChild) wall.removeChild(wall.firstChild);
+    render(groups);
+  }
 
-      groups.forEach(function (g) {
-        var line = document.createElement('div');
-        line.className = 'hero-video-bg__line';
+  /* ---------- 章節聯動：隨機重排 ---------- */
 
-        var sum = 0;
-        g.forEach(function (i) { sum += ar[i]; });
+  function shuffleArray(a) {
+    for (var i = a.length - 1; i > 0; i--) {
+      var j = Math.floor(Math.random() * (i + 1));
+      var t = a[i]; a[i] = a[j]; a[j] = t;
+    }
+    return a;
+  }
 
-        g.forEach(function (i) {
-          var v = vids[i];
-          v.style.width = (ar[i] / sum * 100) + '%';
-          v.style.height = 'auto';
-          line.appendChild(v);
+  var shuffling = false;
+
+  function reshuffle() {
+    if (reduceMotion || shuffling) return;
+
+    var next = shuffleArray(perm.slice());
+    /* 避免洗出跟原本一樣的順序（N>1 時） */
+    var same = true;
+    for (var i = 0; i < N; i++) { if (next[i] !== perm[i]) { same = false; break; } }
+    if (same && N > 1) { next.push(next.shift()); }
+
+    shuffling = true;
+    box.classList.add('is-shuffling');          /* 淡出 */
+
+    window.setTimeout(function () {
+      perm = next;
+      lastKey = null;
+      layout(true);                              /* 重排 */
+
+      /* 等兩帧讓新寬度生效，再淡入（避免看到中間態） */
+      window.requestAnimationFrame(function () {
+        window.requestAnimationFrame(function () {
+          box.classList.remove('is-shuffling');
+          shuffling = false;
         });
-
-        wall.appendChild(line);
       });
-      wall.dataset.sig = sig;
+    }, 240);
+  }
+
+  /* 取「視口中線」所在的 section 索引 */
+  var segs = [];
+  function collectSegs() {
+    segs = [];
+    var list = document.querySelectorAll('section, .page-header, .page-head');
+    for (var i = 0; i < list.length; i++) {
+      var el = list[i];
+      if (el.getBoundingClientRect().height < 120) continue;
+      if (el.closest('.hero-video-bg')) continue;
+      segs.push(el);
     }
   }
 
-  layout();
-  box.classList.add('is-ready');   /* 版面就緒，才顯示 */
+  var currentSeg = -1;
+  var ticking = false;
 
-  var t;
+  function onScroll() {
+    if (ticking) return;
+    ticking = true;
+
+    window.requestAnimationFrame(function () {
+      ticking = false;
+      var mid = window.innerHeight * 0.45;
+      var idx = -1;
+
+      for (var i = 0; i < segs.length; i++) {
+        var r = segs[i].getBoundingClientRect();
+        if (r.top <= mid && r.bottom > mid) { idx = i; break; }
+      }
+      if (idx === -1) return;
+
+      if (currentSeg === -1) { currentSeg = idx; return; }   /* 首次不重排 */
+      if (idx !== currentSeg) { currentSeg = idx; reshuffle(); }
+    });
+  }
+
+  /* ---------- 啟動 ---------- */
+
+  layout(true);
+  box.classList.add('is-ready');
+
+  /* 本腳本緊接影片牆、於 <body> 前段執行，此時 <section> 尚未解析完，
+     因此章節清單必須等 DOM 就緒後（及資源載入後版面穩定時）再收集。 */
+  collectSegs();
+  document.addEventListener('DOMContentLoaded', collectSegs);
+  window.addEventListener('load', function () { collectSegs(); onScroll(); });
+
+  window.addEventListener('scroll', onScroll, { passive: true });
+
+  var rt;
   window.addEventListener('resize', function () {
-    clearTimeout(t);
-    t = setTimeout(layout, 150);
+    clearTimeout(rt);
+    rt = setTimeout(function () {
+      lastKey = null;
+      layout(true);
+      collectSegs();
+    }, 150);
   });
 })();
 </script>
+
+
 
 
 <div class="ann-bar">
@@ -560,7 +671,7 @@
   });
 })();
 </script>
-<script src="assets/js/main.js?v=railFix1"></script>
+<script src="assets/js/main.js?v=shuffle1"></script>
 
 </body>
 </html>
