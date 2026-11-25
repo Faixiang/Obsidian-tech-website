@@ -6,10 +6,7 @@
 <title>技術支持 | 曜石</title>
 <meta name="description" content="曜石智能科技技術支持：常見問題、故障排除、固件與文檔下載、服務響應時效。">
 <link rel="icon" href="assets/img/mark.svg" type="image/svg+xml">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;600;700;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="assets/css/style.css?v=whiteAll3">
+<link rel="stylesheet" href="assets/css/style.css?v=lang1">
 <link rel="stylesheet" href="assets/css/halo-bg.css?v=noHalo1">
 </head>
 <body class="has-halo-bg">
@@ -334,6 +331,7 @@
       </ul>
     </nav>
 <div class="hdr-actions">
+      <a class="lang-switch" href="support-en.html" hreflang="en" lang="en" aria-label="Switch to English version" title="Switch to English version">EN</a>
       <a class="hdr-cart" href="cart.html" aria-label="採購單">
         <span class="hdr-cart__icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 3h2.2l2.3 11.2a1.6 1.6 0 0 0 1.6 1.3h8.9a1.6 1.6 0 0 0 1.6-1.3L21 7H6"/><circle cx="9.5" cy="19.2" r="1.5" fill="currentColor" stroke="none"/><circle cx="17" cy="19.2" r="1.5" fill="currentColor" stroke="none"/></svg></span>
         <span class="hdr-cart__count" data-cart-count hidden>0</span>
@@ -355,7 +353,7 @@
     <div class="container">
       <nav class="more" aria-label="麵包屑"><a href="index.html">首頁</a><span>/</span>技術支持</nav>
       <h1 class="h-page">技術支持</h1>
-      <p class="page-back" style="display:block;margin-top:0">
+      <p class="readable-panel" class="page-back" style="display:block;margin-top:0">
         先查常見問題，多數問題可在無需聯繫技術支援的情況下自行排除。
         仍未解決時請聯繫我們，並附上設備編號與現象描述。
       </p>
@@ -368,7 +366,7 @@
       <div class="section-head">
         <span class="block-no">01</span>
         <h2 class="h2">常見問題</h2>
-        <p class="section-head__sub">依反饋頻率排序，最常見的六項。</p>
+        <p class="section-head__sub readable-panel">依反饋頻率排序，最常見的六項。</p>
       </div>
 
       <div class="acc" data-accordion>
@@ -381,7 +379,7 @@
             </button>
           </h3>
           <div class="acc__panel" id="acc-panel-1" role="region" aria-labelledby="acc-btn-1" hidden>
-            <p class="acc__text">
+            <p class="acc__text readable-panel">
               設備停止上報但本地仍有舊值，通常是網絡中斷而非設備故障。
               檢查現場 Wi-Fi 信號強度與網關在線狀態。
             </p>
@@ -398,7 +396,7 @@
             </button>
           </h3>
           <div class="acc__panel" id="acc-panel-2" role="region" aria-labelledby="acc-btn-2" hidden>
-            <p class="acc__text">
+            <p class="acc__text readable-panel">
               不會。每筆記錄帶設備編號與時間戳，補傳時按此兩者去重，
               同一讀數只會入庫一次。
             </p>
@@ -415,7 +413,7 @@
             </button>
           </h3>
           <div class="acc__panel" id="acc-panel-3" role="region" aria-labelledby="acc-btn-3" hidden>
-            <p class="acc__text">
+            <p class="acc__text readable-panel">
               確認時區設定。E3 按本地時區劃分時段，
               若系統時區與實際不符，切換時段邊界會偏移。
             </p>
@@ -432,7 +430,7 @@
             </button>
           </h3>
           <div class="acc__panel" id="acc-panel-4" role="region" aria-labelledby="acc-btn-4" hidden>
-            <p class="acc__text">
+            <p class="acc__text readable-panel">
               可以。升級路徑不設中間版本約束，
               但跨越兩個大版本時建議先在測試環境驗證。
             </p>
@@ -449,7 +447,7 @@
             </button>
           </h3>
           <div class="acc__panel" id="acc-panel-5" role="region" aria-labelledby="acc-btn-5" hidden>
-            <p class="acc__text">
+            <p class="acc__text readable-panel">
               可以，按月計費，不綁定長約。取消後設備仍會本地記錄數據，
               但不再推送告警與郵件通知。
             </p>
@@ -466,7 +464,7 @@
             </button>
           </h3>
           <div class="acc__panel" id="acc-panel-6" role="region" aria-labelledby="acc-btn-6" hidden>
-            <p class="acc__text">
+            <p class="acc__text readable-panel">
               建議 12 個月校準一次。偏差超過 ±2% 時應校正，
               校正記錄會留存於系統，可導出對賬。
             </p>
@@ -483,10 +481,10 @@
       <div class="section-head">
         <span class="block-no">02</span>
         <h2 class="h2">故障排除速查</h2>
-        <p class="section-head__sub">按現象定位，逐級排除。</p>
+        <p class="section-head__sub readable-panel">按現象定位，逐級排除。</p>
       </div>
 
-      <div class="table-scroll">
+      <div class="table-scroll readable-panel readable-panel--table">
         <table class="table">
           <caption class="visually-hidden">常見故障現象與排除步驟</caption>
           <thead>
@@ -548,10 +546,10 @@
       <div class="section-head">
         <span class="block-no">03</span>
         <h2 class="h2">文檔與韌體</h2>
-        <p class="section-head__sub">所有文檔長期有效，不設下架日期。</p>
+        <p class="section-head__sub readable-panel">所有文檔長期有效，不設下架日期。</p>
       </div>
 
-      <div class="table-scroll">
+      <div class="table-scroll readable-panel readable-panel--table">
         <table class="table">
           <caption class="visually-hidden">可下載文檔與韌體清單</caption>
           <thead>
@@ -705,7 +703,7 @@
   });
 })();
 </script>
-<script src="assets/js/main.js?v=shuffle1"></script>
+<script src="assets/js/main.js?v=railRoll1"></script>
 
 </body>
 </html>

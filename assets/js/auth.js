@@ -69,12 +69,16 @@ var OBSIDIAN = (function () {
     }
   };
 
+  /* --- 語言：依 <html lang> 決定執行期文案（英文頁為 en） --- */
+  var IS_EN = document.documentElement.lang === 'en';
+  function T(zh, en) { return IS_EN ? en : zh; }
+
   var MESSAGES = {
-    required: '此項為必填',
-    email: '請輸入有效的電郵地址',
-    phone: '請輸入8 位數字的香港手機號碼',
-    minLen: '長度不足',
-    match: '兩次輸入不一致'
+    required: T('此項為必填', 'This field is required'),
+    email: T('請輸入有效的電郵地址', 'Please enter a valid email address'),
+    phone: T('請輸入8 位數字的香港手機號碼', 'Please enter an 8-digit Hong Kong mobile number'),
+    minLen: T('長度不足', 'Too short'),
+    match: T('兩次輸入不一致', 'The two entries do not match')
   };
 
   /**
@@ -115,7 +119,7 @@ var OBSIDIAN = (function () {
       var name = rule.split('|')[i].split(':')[0];
       if (MESSAGES[name]) return MESSAGES[name];
     }
-    return '輸入無效';
+    return T('輸入無效', 'Invalid input');
   }
 
   /** 校驗整個表單，返回 {ok, data} */
@@ -272,7 +276,7 @@ var OBSIDIAN = (function () {
   function renderSession() {
     var s = session();
     document.querySelectorAll('[data-session-name]').forEach(function (el) {
-      el.textContent = s ? s.name : '訪客';
+      el.textContent = s ? s.name : T('訪客', 'Guest');
     });
 
     document.querySelectorAll('[data-session-box]').forEach(function (el) {

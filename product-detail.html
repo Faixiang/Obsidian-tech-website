@@ -6,10 +6,7 @@
 <title>產品詳情 | 曜石</title>
 <meta name="description" content="曜石智能科技產品詳細規格：環境感測終端 S1、智能網關 G2、能耗管理套件 E3。">
 <link rel="icon" href="assets/img/mark.svg" type="image/svg+xml">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;600;700;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="assets/css/style.css?v=whiteAll3">
+<link rel="stylesheet" href="assets/css/style.css?v=lang1">
 <link rel="stylesheet" href="assets/css/halo-bg.css?v=noHalo1">
 </head>
 <body class="has-halo-bg">
@@ -334,6 +331,7 @@
       </ul>
     </nav>
 <div class="hdr-actions">
+      <a class="lang-switch" href="product-detail-en.html" hreflang="en" lang="en" aria-label="Switch to English version" title="Switch to English version">EN</a>
       <a class="hdr-cart" href="cart.html" aria-label="採購單">
         <span class="hdr-cart__icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 3h2.2l2.3 11.2a1.6 1.6 0 0 0 1.6 1.3h8.9a1.6 1.6 0 0 0 1.6-1.3L21 7H6"/><circle cx="9.5" cy="19.2" r="1.5" fill="currentColor" stroke="none"/><circle cx="17" cy="19.2" r="1.5" fill="currentColor" stroke="none"/></svg></span>
         <span class="hdr-cart__count" data-cart-count hidden>0</span>
@@ -360,7 +358,7 @@
         <div>
           <span class="block-no" data-no>01 / PRODUCT</span>
           <h1 class="h-page" data-name>產品詳情</h1>
-          <p class="page-back" style="display:block;margin-top:0" data-tagline></p>
+          <p class="readable-panel" class="page-back" style="display:block;margin-top:0" data-tagline></p>
         </div>
         <nav class="mono" style="display:flex;gap:var(--s2);flex-wrap:wrap" aria-label="切換型號">
           <a class="btn btn--secondary" href="product-detail.html?code=S1" data-switch="S1">S1</a>
@@ -377,7 +375,7 @@
 
         <div>
           <figure class="card__media" style="border-radius:var(--r-card);overflow:hidden;border:1px solid rgba(255,255,255,.08)">
-            <img id="pImg" src="assets/img/product-s1.svg" alt="" width="640" height="480">
+            <img id="pImg" src="assets/img/product-s1.svg?v=render1" alt="" width="640" height="480">
           </figure>
 
           <h2 class="h3 mt-8 mb-4">技術參數</h2>
@@ -432,7 +430,7 @@
 
               <button class="btn btn--primary btn--block mt-6" type="button" id="buyBtn">加入採購單</button>
 
-              <p class="form-note mt-4">
+              <p class="form-note mt-4 readable-panel">
                 本示範不接入支付網關，不會索取任何支付資料。
                 點擊後僅在本機生成訂單記錄。
               </p>
@@ -458,7 +456,7 @@
       <div class="section-head">
         <span class="block-no">AI MODULE</span>
         <h2 class="h2" data-ai-title></h2>
-        <p class="section-head__sub" data-ai-desc></p>
+        <p class="section-head__sub readable-panel" data-ai-desc></p>
       </div>
 
       <div class="grid grid--3">
@@ -467,21 +465,21 @@
             <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4"/><circle cx="12" cy="12" r="9"/></svg>
           </span>
           <h3 class="feature__title" data-ai-f1></h3>
-          <p class="feature__text" data-ai-f1d></p>
+          <p class="feature__text readable-panel" data-ai-f1d></p>
         </div>
         <div class="feature feature--purple" data-reveal>
           <span class="feature__icon">
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 18V6M4 6h12l-2 4 2 4H4"/></svg>
           </span>
           <h3 class="feature__title" data-ai-f2></h3>
-          <p class="feature__text" data-ai-f2d></p>
+          <p class="feature__text readable-panel" data-ai-f2d></p>
         </div>
         <div class="feature feature--purple" data-reveal>
           <span class="feature__icon">
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16v12H4z"/><path d="M8 10h8M8 14h5"/></svg>
           </span>
           <h3 class="feature__title" data-ai-f3></h3>
-          <p class="feature__text" data-ai-f3d></p>
+          <p class="feature__text readable-panel" data-ai-f3d></p>
         </div>
       </div>
     </div>
@@ -570,7 +568,7 @@
   });
 })();
 </script>
-<script src="assets/js/main.js?v=shuffle1"></script>
+<script src="assets/js/main.js?v=railRoll1"></script>
 
 <script src="assets/js/auth.js"></script>
 <script src="assets/js/cart.js"></script>
@@ -583,7 +581,7 @@
       no: '01 / SENSOR',
       name: '環境感測終端 S1',
       short: 'S1 環境感測終端',
-      img: 'assets/img/product-s1.svg',
+      img: 'assets/img/product-s1.svg?v=render1',
       tagline: '四合一採集，壁掛即用。可獨立上報，亦可由 G2 統一納管。',
       price: 1280,
       lead: '7 個工作日',
@@ -607,7 +605,7 @@
       no: '02 / GATEWAY',
       name: '智能網關 G2',
       short: 'G2 智能網關',
-      img: 'assets/img/product-g2.svg',
+      img: 'assets/img/product-g2.svg?v=render1',
       tagline: '8 台設備並發接入。斷網期間本地緩存 72 小時，恢復後按時間戳補傳。',
       price: 3680,
       lead: '10 個工作日',
@@ -639,7 +637,7 @@
       no: '03 / ENERGY',
       name: '能耗管理套件 E3',
       short: 'E3 能耗管理套件',
-      img: 'assets/img/product-e3.svg',
+      img: 'assets/img/product-e3.svg?v=render1',
       tagline: '12 回路分時計價，按樓層與用途拆分賬單，報表可導出 CSV。',
       price: 8900,
       lead: '14 個工作日',

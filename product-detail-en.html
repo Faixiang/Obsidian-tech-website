@@ -1,0 +1,764 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Product details | OBSIDIAN</title>
+<meta name="description" content="OBSIDIAN Technologies product specifications: Environmental Sensor S1, Smart Gateway G2, Energy Management Kit E3.">
+<link rel="icon" href="assets/img/mark.svg" type="image/svg+xml">
+<link rel="stylesheet" href="assets/css/style.css?v=lang1">
+<link rel="alternate" hreflang="zh-Hant" href="product-detail-en.html">
+<link rel="alternate" hreflang="en" href="product-detail-en.html">
+<link rel="stylesheet" href="assets/css/halo-bg.css?v=noHalo1">
+</head>
+<body class="has-halo-bg">
+
+<a class="skip-link" href="#main">Skip to main content</a>
+
+<canvas id="particles" aria-hidden="true"></canvas>
+
+<!-- 首頁背景影片牆 · 素材：X @poetengineer__（每條保持完整比例，可放大，由腳本排版） -->
+<div class="hero-video-bg" aria-hidden="true">
+  <div class="hero-video-bg__row">
+    <video class="hero-video-bg__item" muted loop playsinline autoplay preload="none"
+           poster="assets/video/bg-poster-A-X.jpg" data-ar="1.475">
+      <source src="assets/video/bg-loop-A-X.mp4" type="video/mp4">
+    </video>
+    <video class="hero-video-bg__item" muted loop playsinline autoplay preload="none"
+           poster="assets/video/bg-poster-B-Y.jpg" data-ar="0.7627">
+      <source src="assets/video/bg-loop-B-Y.mp4" type="video/mp4">
+    </video>
+    <video class="hero-video-bg__item" muted loop playsinline autoplay preload="none"
+           poster="assets/video/bg-poster-C.jpg" data-ar="1">
+      <source src="assets/video/bg-loop-C.mp4" type="video/mp4">
+    </video>
+    <video class="hero-video-bg__item" muted loop playsinline autoplay preload="none"
+           poster="assets/video/bg-poster-D.jpg" data-ar="1">
+      <source src="assets/video/bg-loop-D.mp4" type="video/mp4">
+    </video>
+    <video class="hero-video-bg__item" muted loop playsinline autoplay preload="none"
+           poster="assets/video/bg-poster-E.jpg" data-ar="1">
+      <source src="assets/video/bg-loop-E.mp4" type="video/mp4">
+    </video>
+    <video class="hero-video-bg__item" muted loop playsinline autoplay preload="none"
+           poster="assets/video/bg-poster-F.jpg" data-ar="1">
+      <source src="assets/video/bg-loop-F.mp4" type="video/mp4">
+    </video>
+    <video class="hero-video-bg__item" muted loop playsinline autoplay preload="none"
+           poster="assets/video/bg-poster-G.jpg" data-ar="1">
+      <source src="assets/video/bg-loop-G.mp4" type="video/mp4">
+    </video>
+    <video class="hero-video-bg__item" muted loop playsinline autoplay preload="none"
+           poster="assets/video/bg-poster-H.jpg" data-ar="1">
+      <source src="assets/video/bg-loop-H.mp4" type="video/mp4">
+    </video>
+    <video class="hero-video-bg__item" muted loop playsinline autoplay preload="none"
+           poster="assets/video/bg-poster-I.jpg" data-ar="1">
+      <source src="assets/video/bg-loop-I.mp4" type="video/mp4">
+    </video>
+  </div>
+</div>
+
+<!-- 網格遮罩：壓在所有背景影片之上、內容之下 -->
+<div class="grid-overlay" aria-hidden="true"></div>
+
+<script>
+/* 背景影片牆排版 + 章節聯動重排
+   ------------------------------------------------------------------
+   排版：
+     1. 影片切成若干「列」，列內按各片 aspect ratio 分配寬度（加總 100%），
+        故列內永不裁切、不變形。
+     2. 列高 = 列寬 ÷ 列內比例總和；整牆自然高 Ht = 各列高之和。
+     3. 整牆等比縮放 max(1, H/Ht) 使高度填滿視口（+0.002 補次像素）。
+     4. 分列方式穷舉（256 分段 × n 旋轉）挑最接近視口高度者。
+   防跳動：
+     - 腳本緊接影片牆標記，解析階段同步執行，早於第一次繪製。
+     - CSS 預設 .hero-video-bg { opacity: 0 }，就緒後加 .is-ready。
+     - 分列結果按「視窗尺寸 + 排列簽名」快取於 sessionStorage。
+   章節聯動（新增）：
+     - 以捲動位置判斷目前落在哪個 <section>（取視口中線所屬者）。
+     - 跨到新分段時，隨機打亂影片順序並重新分列 → 背景「隨機移動」。
+     - 過程用 .is-shuffling 淡出／淡入掩護 DOM 重組，避免硬跳；
+       prefers-reduced-motion 下不做任何重排。
+*/
+(function heroVideoWall() {
+  'use strict';
+
+  var box = document.querySelector('.hero-video-bg');
+  var wall = document.querySelector('.hero-video-bg__row');
+  if (!box || !wall) return;
+
+  var vids = Array.prototype.slice.call(wall.querySelectorAll('.hero-video-bg__item'));
+  if (!vids.length) return;
+
+  var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  function arOf(v) {
+    if (v.videoWidth && v.videoHeight) return v.videoWidth / v.videoHeight;
+    return parseFloat(v.dataset.ar) || 1;
+  }
+
+  var AR = vids.map(arOf);
+  var N = AR.length;
+  var perm = AR.map(function (_, i) { return i; });   /* 目前排列順序 */
+  var lastKey = null;
+
+  function permSig() { return perm.join('-'); }
+
+  function cacheGet(key) {
+    try {
+      var raw = sessionStorage.getItem('obsidian_wall_v2_' + key);
+      if (!raw) return null;
+      var g = JSON.parse(raw);
+      return (g && g.length) ? g : null;
+    } catch (e) { return null; }
+  }
+
+  function cacheSet(key, groups) {
+    try { sessionStorage.setItem('obsidian_wall_v2_' + key, JSON.stringify(groups)); } catch (e) {}
+  }
+
+  /* 穷舉：把 perm 序列切成「連續段」，各段成列 */
+  function computeGroups(W, H) {
+    var bestErr = Infinity;
+    var best = null;
+
+    for (var rot = 0; rot < N; rot++) {
+      var order = [];
+      for (var i = 0; i < N; i++) order.push(perm[(rot + i) % N]);
+
+      for (var mask = 0; mask < (1 << (N - 1)); mask++) {
+        var gs = [];
+        var cur = [order[0]];
+        for (var j = 1; j < N; j++) {
+          if (mask & (1 << (j - 1))) { gs.push(cur); cur = [order[j]]; }
+          else cur.push(order[j]);
+        }
+        gs.push(cur);
+
+        var inv = 0;
+        for (var g = 0; g < gs.length; g++) {
+          var s = 0;
+          for (var k = 0; k < gs[g].length; k++) s += AR[gs[g][k]];
+          inv += 1 / s;
+        }
+        var err = Math.abs(W * inv - H);
+        if (err < bestErr) { bestErr = err; best = gs; }
+      }
+    }
+    return best;
+  }
+
+  function render(groups) {
+    var sig = JSON.stringify(groups);
+    if (wall.dataset.sig === sig) return;
+    wall.dataset.sig = sig;
+
+    while (wall.firstChild) wall.removeChild(wall.firstChild);
+
+    groups.forEach(function (g) {
+      var line = document.createElement('div');
+      line.className = 'hero-video-bg__line';
+
+      var sum = 0;
+      g.forEach(function (i) { sum += AR[i]; });
+
+      g.forEach(function (i) {
+        var v = vids[i];
+        v.style.width = (AR[i] / sum * 100) + '%';
+        v.style.height = 'auto';
+        line.appendChild(v);
+      });
+
+      wall.appendChild(line);
+    });
+  }
+
+  function layout(force) {
+    var W = window.innerWidth;
+    var H = window.innerHeight;
+    var key = W + 'x' + H + '|' + permSig();
+    if (!force && key === lastKey) return;
+    lastKey = key;
+
+    var groups = cacheGet(key);
+    if (!groups) {
+      groups = computeGroups(W, H);
+      if (!groups) return;
+      cacheSet(key, groups);
+    }
+
+    /* 縮放係數：任何情況都重算（含快取命中） */
+    var inv = 0;
+    groups.forEach(function (g) {
+      var s = 0;
+      g.forEach(function (i) { s += AR[i]; });
+      inv += 1 / s;
+    });
+    var k = Math.max(1, H / (W * inv) + 0.002);
+    wall.style.transform = 'translate(-50%, -50%) scale(' + k.toFixed(4) + ')';
+
+    render(groups);
+  }
+
+  /* ---------- 章節聯動：隨機重排 ---------- */
+
+  function shuffleArray(a) {
+    for (var i = a.length - 1; i > 0; i--) {
+      var j = Math.floor(Math.random() * (i + 1));
+      var t = a[i]; a[i] = a[j]; a[j] = t;
+    }
+    return a;
+  }
+
+  var shuffling = false;
+
+  function reshuffle() {
+    if (reduceMotion || shuffling) return;
+
+    var next = shuffleArray(perm.slice());
+    /* 避免洗出跟原本一樣的順序（N>1 時） */
+    var same = true;
+    for (var i = 0; i < N; i++) { if (next[i] !== perm[i]) { same = false; break; } }
+    if (same && N > 1) { next.push(next.shift()); }
+
+    shuffling = true;
+    box.classList.add('is-shuffling');          /* 淡出 */
+
+    window.setTimeout(function () {
+      perm = next;
+      lastKey = null;
+      layout(true);                              /* 重排 */
+
+      /* 等兩帧讓新寬度生效，再淡入（避免看到中間態） */
+      window.requestAnimationFrame(function () {
+        window.requestAnimationFrame(function () {
+          box.classList.remove('is-shuffling');
+          shuffling = false;
+        });
+      });
+    }, 240);
+  }
+
+  /* 取「視口中線」所在的 section 索引 */
+  var segs = [];
+  function collectSegs() {
+    segs = [];
+    var list = document.querySelectorAll('section, .page-header, .page-head');
+    for (var i = 0; i < list.length; i++) {
+      var el = list[i];
+      if (el.getBoundingClientRect().height < 120) continue;
+      if (el.closest('.hero-video-bg')) continue;
+      segs.push(el);
+    }
+  }
+
+  var currentSeg = -1;
+  var ticking = false;
+
+  function onScroll() {
+    if (ticking) return;
+    ticking = true;
+
+    window.requestAnimationFrame(function () {
+      ticking = false;
+      var mid = window.innerHeight * 0.45;
+      var idx = -1;
+
+      for (var i = 0; i < segs.length; i++) {
+        var r = segs[i].getBoundingClientRect();
+        if (r.top <= mid && r.bottom > mid) { idx = i; break; }
+      }
+      if (idx === -1) return;
+
+      if (currentSeg === -1) { currentSeg = idx; return; }   /* 首次不重排 */
+      if (idx !== currentSeg) { currentSeg = idx; reshuffle(); }
+    });
+  }
+
+  /* ---------- 啟動 ---------- */
+
+  layout(true);
+  box.classList.add('is-ready');
+
+  /* 本腳本緊接影片牆、於 <body> 前段執行，此時 <section> 尚未解析完，
+     因此章節清單必須等 DOM 就緒後（及資源載入後版面穩定時）再收集。 */
+  collectSegs();
+  document.addEventListener('DOMContentLoaded', collectSegs);
+  window.addEventListener('load', function () { collectSegs(); onScroll(); });
+
+  window.addEventListener('scroll', onScroll, { passive: true });
+
+  var rt;
+  window.addEventListener('resize', function () {
+    clearTimeout(rt);
+    rt = setTimeout(function () {
+      lastKey = null;
+      layout(true);
+      collectSegs();
+    }, 150);
+  });
+})();
+</script>
+
+
+
+
+<div class="ann-bar">
+  <div class="ann-bar__track">
+    <span><b>SYS</b> All devices online · 99.9% connectivity</span>
+    <span><b>NET</b> G3 gateway passed environmental reliability test · 720 hours uninterrupted</span>
+    <span><b>FW</b> S1 firmware v2.4.1 released</span>
+    <span><b>OPS</b> Cloud hosting service operating normally</span>
+    <span><b>SYS</b> All devices online · 99.9% connectivity</span>
+    <span><b>NET</b> G3 gateway passed environmental reliability test · 720 hours uninterrupted</span>
+    <span><b>FW</b> S1 firmware v2.4.1 released</span>
+    <span><b>OPS</b> Cloud hosting service operating normally</span>
+  </div>
+</div>
+
+<header class="site-header">
+  <div class="scroll-progress" aria-hidden="true"></div>
+  <div class="container site-header__inner">
+    <a class="brand" href="index-en.html"><img src="assets/img/logo.svg" width="800" height="208" alt="OBSIDIAN"></a>
+    <button class="nav__toggle" type="button" aria-expanded="false" aria-controls="site-nav" aria-label="Open navigation"><span></span></button>
+    <nav class="nav" id="site-nav" aria-label="Main navigation">
+      <ul class="nav__list">
+        <li><a class="nav__link" href="about-en.html">About</a></li>
+        <li><a class="nav__link" href="products-en.html">Products</a></li>
+        <li><a class="nav__link" href="services-en.html">Services</a></li>
+        <li><a class="nav__link" href="support-en.html">Support</a></li>
+        <li><a class="nav__link" href="news-en.html">News</a></li>
+        <li><a class="nav__link" href="contact-en.html">Contact</a></li>
+      </ul>
+    </nav>
+<div class="hdr-actions">
+      <a class="lang-switch" href="product-detail.html" hreflang="zh-Hant" lang="zh-Hant" aria-label="切換至中文版" title="切換至中文版">中文</a>
+      <a class="hdr-cart" href="cart-en.html" aria-label="Purchase order">
+        <span class="hdr-cart__icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 3h2.2l2.3 11.2a1.6 1.6 0 0 0 1.6 1.3h8.9a1.6 1.6 0 0 0 1.6-1.3L21 7H6"/><circle cx="9.5" cy="19.2" r="1.5" fill="currentColor" stroke="none"/><circle cx="17" cy="19.2" r="1.5" fill="currentColor" stroke="none"/></svg></span>
+        <span class="hdr-cart__count" data-cart-count hidden>0</span>
+      </a>
+
+      <a class="btn btn--secondary" href="login-en.html" data-guest-box>Sign in</a>
+
+      <div class="hdr-user" data-session-box hidden>
+        <span class="hdr-user__name" data-session-name></span>
+        <button class="hdr-user__out" type="button" data-logout>Sign out</button>
+      </div>
+    </div>
+  </div>
+</header>
+
+<main id="main">
+
+  <section class="page-header" style="padding-top:calc(var(--nav-total) + var(--s8))">
+    <div class="container">
+      <nav class="more" aria-label="Breadcrumb">
+        <a href="index-en.html">Home</a><span>/</span><a href="products-en.html">Products</a><span>/</span><span data-crumb>Product details</span>
+      </nav>
+      <div class="row-between" style="align-items:flex-end;flex-wrap:wrap">
+        <div>
+          <span class="block-no" data-no>01 / PRODUCT</span>
+          <h1 class="h-page" data-name>Product details</h1>
+          <p class="readable-panel" class="page-back" style="display:block;margin-top:0" data-tagline></p>
+        </div>
+        <nav class="mono" style="display:flex;gap:var(--s2);flex-wrap:wrap" aria-label="Switch model">
+          <a class="btn btn--secondary" href="product-detail-en.html?code=S1" data-switch="S1">S1</a>
+          <a class="btn btn--secondary" href="product-detail-en.html?code=G2" data-switch="G2">G2</a>
+          <a class="btn btn--secondary" href="product-detail-en.html?code=E3" data-switch="E3">E3</a>
+        </nav>
+      </div>
+    </div>
+  </section>
+
+  <section class="section bg-night">
+    <div class="container">
+      <div class="grid grid--sidebar">
+
+        <div>
+          <figure class="card__media" style="border-radius:var(--r-card);overflow:hidden;border:1px solid rgba(255,255,255,.08)">
+            <img id="pImg" src="assets/img/product-s1.svg?v=render1" alt="" width="640" height="480">
+          </figure>
+
+          <h2 class="h3 mt-8 mb-4">Technical specifications</h2>
+          <div class="spec-list" id="pSpecs"></div>
+
+          <h2 class="h3 mt-8 mb-4">Use cases</h2>
+          <p class="body-muted" data-scenes></p>
+
+          <h2 class="h3 mt-8 mb-4">What's in the box</h2>
+          <ul class="tick-list" data-boxes></ul>
+
+          <div class="notice notice--warn mt-8">
+            <span>
+              <strong>Specifications may change between batches.</strong><br>
+              Before you order we confirm final specifications in writing and note any differences from this page in the contract.
+            </span>
+          </div>
+        </div>
+
+        <aside>
+          <div class="card">
+            <div class="card__body">
+              <span class="eyebrow" data-code>MODEL</span>
+              <h2 class="h3 mt-3" data-shortname></h2>
+
+              <div class="row-between mt-6">
+                <span class="caption">Unit price</span>
+                <span class="price" data-price></span>
+              </div>
+              <div class="row-between mt-2">
+                <span class="caption">Lead time</span>
+                <span class="mono" data-lead></span>
+              </div>
+              <div class="row-between mt-2">
+                <span class="caption">Standard warranty</span>
+                <span class="mono">24 months</span>
+              </div>
+
+              <div class="field mt-6">
+                <label class="field__label" for="qty">Quantity</label>
+                <div class="qty">
+                  <button type="button" class="qty__btn" id="minus" aria-label="Decrease quantity">&minus;</button>
+                  <span class="qty__num" id="qtyNum">1</span>
+                  <button type="button" class="qty__btn" id="plus" aria-label="Increase quantity">+</button>
+                </div>
+              </div>
+
+              <div class="row-between mt-4">
+                <span class="caption">Subtotal</span>
+                <strong class="mono" id="subtotal"></strong>
+              </div>
+
+              <button class="btn btn--primary btn--block mt-6" type="button" id="buyBtn">Add to purchase order</button>
+
+              <p class="form-note mt-4 readable-panel">
+                This demo is not connected to a payment gateway and never asks for payment data. Clicking only creates an order record on this device.
+              </p>
+
+              <hr class="hr mt-6">
+
+              <ul class="tick-list mt-6">
+                <li>Free shipping over HK$5,000; HK$120 added below that</li>
+                <li>Standard installation included in the price</li>
+                <li>Extended warranty up to 60 months</li>
+              </ul>
+            </div>
+          </div>
+        </aside>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= 創新模組（僅 G2 / E3） ================= -->
+  <section class="section bg-gradient-blue-purple grid-deco grid-deco--purple" id="aiSection" hidden>
+    <div class="container">
+      <div class="section-head">
+        <span class="block-no">AI MODULE</span>
+        <h2 class="h2" data-ai-title></h2>
+        <p class="section-head__sub readable-panel" data-ai-desc></p>
+      </div>
+
+      <div class="grid grid--3">
+        <div class="feature feature--purple" data-reveal>
+          <span class="feature__icon">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4"/><circle cx="12" cy="12" r="9"/></svg>
+          </span>
+          <h3 class="feature__title" data-ai-f1></h3>
+          <p class="feature__text readable-panel" data-ai-f1d></p>
+        </div>
+        <div class="feature feature--purple" data-reveal>
+          <span class="feature__icon">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 18V6M4 6h12l-2 4 2 4H4"/></svg>
+          </span>
+          <h3 class="feature__title" data-ai-f2></h3>
+          <p class="feature__text readable-panel" data-ai-f2d></p>
+        </div>
+        <div class="feature feature--purple" data-reveal>
+          <span class="feature__icon">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16v12H4z"/><path d="M8 10h8M8 14h5"/></svg>
+          </span>
+          <h3 class="feature__title" data-ai-f3></h3>
+          <p class="feature__text readable-panel" data-ai-f3d></p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="cta-band">
+    <div class="container cta-band__inner">
+      <div>
+        <h2 class="cta-band__title">Need bulk purchasing or a site survey?</h2>
+        <p class="cta-band__text">We propose a configuration based on point count and network environment.</p>
+      </div>
+      <a class="btn btn--primary" href="contact-en.html">Contact us</a>
+    </div>
+  </section>
+
+</main>
+
+<footer class="site-footer">
+  <div class="ft-inner">
+    <div class="ft-top">
+      <div class="ft-brand">
+        <img src="assets/img/logo.svg" alt="OBSIDIAN" width="800" height="208" loading="lazy">
+        <p class="ft-slogan">Reliable connectivity for every device</p>
+        <p class="ft-desc">
+          OBSIDIAN Technologies · Founded 2016 at Hong Kong Science Park<br>
+          Focused on industrial and residential IoT: sensing, edge connectivity and energy management.
+        </p>
+      </div>
+      <div class="ft-col">
+        <h4>Products</h4>
+        <a href="products-en.html">Environmental Sensor S1</a>
+        <a href="products-en.html">Smart Gateway G2</a>
+        <a href="products-en.html">Energy Management Kit E3</a>
+        <a href="services-en.html">Service plans</a>
+      </div>
+      <div class="ft-col">
+        <h4>Company</h4>
+        <a href="about-en.html">About us</a>
+        <a href="news-en.html">Company news</a>
+        <a href="careers-en.html">Careers</a>
+        <a href="sitemap-en.html">Sitemap</a>
+      </div>
+      <div class="ft-col">
+        <h4>Support</h4>
+        <a href="support-en.html">Technical support</a>
+        <a href="contact-en.html">Contact us</a>
+        <a href="login-en.html">Customer sign-in</a>
+        <a href="register-en.html">Create account</a>
+      </div>
+    </div>
+    <div class="ft-rule"></div>
+    <div class="ft-bottom">
+      <span>© <span data-year>2026</span> OBSIDIAN Technologies Ltd.</span>
+      <span class="ft-final">OBSIDIAN TECHNOLOGIES · CIS222 GROUP PROJECT</span>
+      <span>Hong Kong Science Park</span>
+    </div>
+  </div>
+</footer>
+
+<div class="toast" role="status" aria-live="polite"></div>
+<script>
+/* Background: .obsidian-bg is injected by main.js (CSS layers only).
+   Keep the legacy #particles canvas inert so only one rAF loop runs. */
+(function () {
+  var p = document.getElementById("particles");
+  if (p) { p.id = "particles-off"; p.setAttribute("hidden", ""); }
+})();
+</script>
+<script>
+/* 首頁背景影片：減少動效偏好下不播放；切換分頁時暫停，避免後台空耗 */
+(function () {
+  var vids = document.querySelectorAll('.hero-video-bg video');
+  if (!vids.length) return;
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  function playAll() {
+    Array.prototype.forEach.call(vids, function (v) {
+      v.play().catch(function () { /* 自動播放被攔截時保留海報圖 */ });
+    });
+  }
+  playAll();
+  document.addEventListener('visibilitychange', function () {
+    Array.prototype.forEach.call(vids, function (v) {
+      if (document.hidden) { v.pause(); }
+      else { v.play().catch(function () {}); }
+    });
+  });
+})();
+</script>
+<script src="assets/js/main.js?v=railRoll1"></script>
+
+<script src="assets/js/auth.js?v=lang1"></script>
+<script src="assets/js/cart.js?v=lang1"></script>
+<script>
+(function () {
+  'use strict';
+
+  var PRODUCTS = {
+    S1: {
+      no: '01 / SENSOR',
+      name: 'Environmental Sensor S1',
+      short: 'S1 Environmental Sensor',
+      img: 'assets/img/product-s1.svg?v=render1',
+      tagline: 'Four-in-one sensing, wall-mounted and ready to use. Reports independently or is managed centrally by G2.',
+      price: 1280,
+      lead: '7 working days',
+      specs: [
+        ['Measurement range', '-20 ~ 60°C/ 0 ~ 85% RH'],
+        ['Sensing', 'Temperature/humidity / CO₂ / PM2.5'],
+        ['CO₂ accuracy', '± 50 ppm'],
+        ['PM2.5 accuracy', '± 15 μg/m³'],
+        ['Connectivity', 'Wi-Fi 802.11 b/g/n'],
+        ['Power supply', 'USB-C 5V or PoE'],
+        ['Ingress protection', 'IP54'],
+        ['Operating temperature', '-10 ~ 55°C'],
+        ['Dimensions', '92 × 128 × 26 mm'],
+        ['Warranty', '24 months']
+      ],
+      scenes: 'Air quality monitoring on factory floors, environmental records in shared building areas, temperature and humidity observation in living rooms. Mount 1.5 m above the floor, away from vents and direct sunlight.',
+      boxes: ['Main unit × 1', 'Wall bracket and screw pack', 'USB-C power cable', 'Quick start guide', 'Datasheet and wiring diagram (Chinese / English)'],
+      ai: null
+    },
+    G2: {
+      no: '02 / GATEWAY',
+      name: 'Smart Gateway G2',
+      short: 'G2 Smart Gateway',
+      img: 'assets/img/product-g2.svg?v=render1',
+      tagline: '8 concurrent devices. 72 hours of local buffering during outages, backfilled by timestamp once restored.',
+      price: 3680,
+      lead: '10 working days',
+      specs: [
+        ['Concurrent devices', '8 terminals'],
+        ['Local buffer', '72 hours'],
+        ['Edge decision latency', 'Median 0.02 s'],
+        ['Uplink', 'Ethernet 10/100'],
+        ['Field interfaces', 'RS-485 / dry contact × 2'],
+        ['Onboarding', 'S1 dedicated pairing protocol'],
+        ['Storage', 'eMMC 8 GB'],
+        ['Operating temperature', '-20 ~ 60°C'],
+        ['Dimensions', '184 × 132 × 42 mm'],
+        ['Warranty', '24 months']
+      ],
+      scenes: 'Multi-circuit monitoring in plants, central control room integration in buildings, unified reporting across floors. Install near the distribution board with clearance for heat dissipation.',
+      boxes: ['Main unit × 1', 'DIN rail mounting clip', 'AC adapter', 'Terminal block pack', 'Datasheet and wiring diagram (Chinese / English)'],
+      ai: {
+        title: 'G2 anomaly detection',
+        desc: 'Runs a lightweight model locally on the gateway, compares each device against its historical baseline and raises alerts on site when readings drift, without waiting for a cloud round trip.',
+        fs: [
+          ['On-device inference', 'The model runs inside the gateway, so alerting keeps working during outages.'],
+          ['Baseline calibration', 'Users calibrate the baseline manually each season, avoiding automatic drift.'],
+          ['Traceable versions', 'Model versions are kept with the firmware record, so any past inference can be traced.']
+        ]
+      }
+    },
+    E3: {
+      no: '03 / ENERGY',
+      name: 'Energy Management Kit E3',
+      short: 'E3 Energy Management Kit',
+      img: 'assets/img/product-e3.svg?v=render1',
+      tagline: '12 circuits with time-of-use pricing, bills split by floor and use, reports exportable to CSV.',
+      price: 8900,
+      lead: '14 working days',
+      specs: [
+        ['Circuits', '12 single-phase'],
+        ['Measurement accuracy', '± 0.5%'],
+        ['Time-of-use pricing', '8 time bands'],
+        ['Data retention', '36 months locally'],
+        ['Connectivity', 'Ethernet / RS-485'],
+        ['Report export', 'CSV / XLSX'],
+        ['Calibration interval', '12 months recommended'],
+        ['Operating temperature', '-20 ~ 55°C'],
+        ['Dimensions', '260 × 180 × 68 mm'],
+        ['Warranty', '24 months']
+      ],
+      scenes: 'Property managers allocating electricity cost by floor, manufacturers accounting energy by workshop, mixed-use properties splitting actual usage by tenant. Circuit connection must be done by a licensed electrician.',
+      boxes: ['Main unit × 1', 'Current transformers × 12', ' DIN rail mounting clip', 'Terminal block pack', 'Datasheet and wiring diagram (Chinese / English)'],
+      ai: {
+        title: 'E3 usage forecast',
+        desc: 'Projects next month\'s range from historical usage and production schedules. Forecasts are for planning reference only and never adjust device policies automatically.',
+        fs: [
+          ['Layered modelling', 'Modelled separately by floor and use, without flattening the differences.'],
+          ['Range output', 'Ranges with confidence levels, never a single number.'],
+          ['Finance review', 'CSV export for finance review, aligned with existing report formats.']
+        ]
+      }
+    }
+  };
+
+  var code = (OBSIDIAN.qs('code') || 'S1').toUpperCase();
+  var p = PRODUCTS[code] || PRODUCTS.S1;
+
+  document.title = p.short + ' | OBSIDIAN Technologies';
+
+  function set(sel, val) {
+    var el = document.querySelector(sel);
+    if (el) el.textContent = val;
+  }
+
+  set('[data-crumb]', p.short);
+  set('[data-no]', p.no);
+  set('[data-name]', p.name);
+  set('[data-tagline]', p.tagline);
+  set('[data-code]', 'MODEL ' + code);
+  set('[data-shortname]', p.short);
+  set('[data-price]', 'HK$' + p.price.toLocaleString('en-HK'));
+  set('[data-lead]', p.lead + 'Business days');
+  set('[data-scenes]', p.scenes);
+
+  var img = document.getElementById('pImg');
+  if (img) {
+    img.src = p.img;
+    img.alt = p.name + ' Product render';
+  }
+
+  document.getElementById('pSpecs').innerHTML = p.specs
+    .map(function (r) {
+      return '<div class="spec-row"><span class="spec-row__key">' +
+        OBSIDIAN.esc(r[0]) + '</span><span class="spec-row__val">' +
+        OBSIDIAN.esc(r[1]) + '</span></div>';
+    })
+    .join('');
+
+  document.querySelector('[data-boxes]').innerHTML = p.boxes
+    .map(function (b) {
+      return '<li>' + OBSIDIAN.esc(b) + '</li>';
+    })
+    .join('');
+
+  /* 當前型號的切換鈕高亮 */
+  document.querySelectorAll('[data-switch]').forEach(function (a) {
+    if (a.getAttribute('data-switch') === code) {
+      a.classList.remove('btn--secondary');
+      a.classList.add('btn--primary');
+      a.setAttribute('aria-current', 'true');
+    }
+  });
+
+  /* 創新模組區塊 */
+  var ai = document.getElementById('aiSection');
+  if (p.ai) {
+    ai.hidden = false;
+    set('[data-ai-title]', p.ai.title);
+    set('[data-ai-desc]', p.ai.desc);
+    for (var i = 0; i < 3; i++) {
+      set('[data-ai-f' + (i + 1) + ']', p.ai.fs[i][0]);
+      set('[data-ai-f' + (i + 1) + 'd]', p.ai.fs[i][1]);
+    }
+  }
+
+  /* 數量與小計 */
+  var qty = 1;
+  var qtyNum = document.getElementById('qtyNum');
+  var subtotal = document.getElementById('subtotal');
+
+  function sync() {
+    qtyNum.textContent = String(qty);
+    subtotal.textContent = 'HK$' + (p.price * qty).toLocaleString('en-HK');
+  }
+
+  document.getElementById('minus').addEventListener('click', function () {
+    if (qty > 1) qty--;
+    sync();
+  });
+
+  document.getElementById('plus').addEventListener('click', function () {
+    if (qty < 99) qty++;
+    sync();
+  });
+
+  sync();
+
+  document.getElementById('buyBtn').addEventListener('click', function () {
+    OBSIDIAN_CART.add(code, qty);
+    OBSIDIAN_TOAST('Added to purchase order:' + p.short + ' × ' + qty);
+    setTimeout(function () {
+      location.href = 'cart.html';
+    }, 900);
+  });
+})();
+</script>
+</body>
+</html>

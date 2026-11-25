@@ -9,27 +9,31 @@
 
   var KEY_CART = 'obsidian.cart';
 
+  /* --- 語言：依 <html lang> 決定執行期文案（英文頁為 en） --- */
+  var IS_EN = document.documentElement.lang === 'en';
+  function T(zh, en) { return IS_EN ? en : zh; }
+
   var catalog = {
     S1: {
       code: 'S1',
-      name: '環境感測終端 S1',
+      name: T('環境感測終端 S1', 'Environmental Sensor S1'),
       price: 1280,
-      spec: '溫濕度 / CO₂ / PM2.5 四合一',
-      lead: '7 個工作日'
+      spec: T('溫濕度 / CO₂ / PM2.5 四合一', 'Temp/humidity / CO₂ / PM2.5 four-in-one'),
+      lead: T('7 個工作日', '7 working days')
     },
     G2: {
       code: 'G2',
-      name: '智能網關 G2',
+      name: T('智能網關 G2', 'Smart Gateway G2'),
       price: 3680,
-      spec: '8 設備並發 / 本地邊緣儲存',
-      lead: '10 個工作日'
+      spec: T('8 設備並發 / 本地邊緣儲存', '8 concurrent devices / local edge storage'),
+      lead: T('10 個工作日', '10 working days')
     },
     E3: {
       code: 'E3',
-      name: '能耗管理套件 E3',
+      name: T('能耗管理套件 E3', 'Energy Management Kit E3'),
       price: 8900,
-      spec: '12 迴路 / 分時計價 / 報表導出',
-      lead: '14 個工作日'
+      spec: T('12 迴路 / 分時計價 / 報表導出', '12 circuits / time-of-use pricing / report export'),
+      lead: T('14 個工作日', '14 working days')
     }
   };
 
@@ -167,20 +171,20 @@
           '<div class="qty">' +
           '<button type="button" class="qty__btn" data-dec="' +
           OBSIDIAN.esc(i.code) +
-          '" aria-label="減少數量">&minus;</button>' +
+          '" aria-label="' + T('減少數量', 'Decrease quantity') + '">&minus;</button>' +
           '<span class="qty__num">' +
           i.qty +
           '</span>' +
           '<button type="button" class="qty__btn" data-inc="' +
           OBSIDIAN.esc(i.code) +
-          '" aria-label="增加數量">+</button>' +
+          '" aria-label="' + T('增加數量', 'Increase quantity') + '">+</button>' +
           '</div></td>' +
           '<td class="mono">' +
           OBSIDIAN.money(i.price * i.qty) +
           '</td>' +
           '<td><button type="button" class="link-danger" data-rm="' +
           OBSIDIAN.esc(i.code) +
-          '">移除</button></td>' +
+          '">' + T('移除', 'Remove') + '</button></td>' +
           '</tr>'
         );
       })
@@ -194,7 +198,7 @@
     var elTotal = document.querySelector('[data-sum-total]');
 
     if (elSub) elSub.textContent = OBSIDIAN.money(sub);
-    if (elShip) elShip.textContent = ship ? OBSIDIAN.money(ship) : '免運費';
+    if (elShip) elShip.textContent = ship ? OBSIDIAN.money(ship) : T('免運費', 'Free shipping');
     if (elTotal) elTotal.textContent = OBSIDIAN.money(total());
   }
 

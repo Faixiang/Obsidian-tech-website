@@ -6,10 +6,7 @@
 <title>聯繫我們 | 曜石</title>
 <meta name="description" content="聯繫曜石智能科技：一般諮詢、客戶評論與投訴反饋三種渠道。">
 <link rel="icon" href="assets/img/mark.svg" type="image/svg+xml">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;600;700;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="assets/css/style.css?v=whiteAll3">
+<link rel="stylesheet" href="assets/css/style.css?v=lang1">
 <link rel="stylesheet" href="assets/css/halo-bg.css?v=noHalo1">
 </head>
 <body class="has-halo-bg">
@@ -334,6 +331,7 @@
       </ul>
     </nav>
 <div class="hdr-actions">
+      <a class="lang-switch" href="contact-en.html" hreflang="en" lang="en" aria-label="Switch to English version" title="Switch to English version">EN</a>
       <a class="hdr-cart" href="cart.html" aria-label="採購單">
         <span class="hdr-cart__icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 3h2.2l2.3 11.2a1.6 1.6 0 0 0 1.6 1.3h8.9a1.6 1.6 0 0 0 1.6-1.3L21 7H6"/><circle cx="9.5" cy="19.2" r="1.5" fill="currentColor" stroke="none"/><circle cx="17" cy="19.2" r="1.5" fill="currentColor" stroke="none"/></svg></span>
         <span class="hdr-cart__count" data-cart-count hidden>0</span>
@@ -355,7 +353,7 @@
     <div class="container">
       <nav class="more" aria-label="麵包屑"><a href="index.html">首頁</a><span>/</span>聯繫我們</nav>
       <h1 class="h-page">聯繫我們</h1>
-      <p class="page-back" style="display:block;margin-top:0">
+      <p class="readable-panel" class="page-back" style="display:block;margin-top:0">
         三種渠道分別處理諮詢、評論與投訴。投訴專線直通質保部門，不經銷售轉手。
       </p>
     </div>
@@ -381,7 +379,7 @@
               <div class="card__body">
                 <span class="badge badge--cyan">諮詢</span>
                 <h2 class="h3 mt-4">一般諮詢</h2>
-                <p class="card__text">
+                <p class="card__text readable-panel">
                   產品選型、報價、現場勘察安排等問題，走此渠道。
                   工作日 9:00–18:00，兩個工作日內回覆。
                 </p>
@@ -403,7 +401,7 @@
                   <div class="field">
                     <label class="field__label" for="i-phone">電話 <span class="req">*</span></label>
                     <input class="input" type="tel" id="i-phone" name="phone" data-rule="required|phone" autocomplete="tel-national">
-                    <span class="field__hint">香港 8 位數字</span>
+                    <span class="field__hint readable-panel">香港 8 位數字</span>
                     <span class="field__error"></span>
                   </div>
 
@@ -429,7 +427,7 @@
                   </div>
 
                   <button class="btn btn--primary" type="submit">提交諮詢</button>
-                  <p class="form-note">本示範不送出任何資料至伺服器，僅在本機顯示提交結果。</p>
+                  <p class="form-note readable-panel">本示範不送出任何資料至伺服器，僅在本機顯示提交結果。</p>
                 </form>
               </div>
             </div>
@@ -441,7 +439,7 @@
               <div class="card__body">
                 <span class="badge badge--success">評論</span>
                 <h2 class="h3 mt-4">客戶評論</h2>
-                <p class="card__text">
+                <p class="card__text readable-panel">
                   對產品或服務的具體建議。我們會逐條閱讀，
                   採納與否均會在下次更新中說明。
                 </p>
@@ -497,7 +495,7 @@
               <div class="card__body">
                 <span class="badge badge--danger">投訴</span>
                 <h2 class="h3 mt-4">投訴</h2>
-                <p class="card__text">
+                <p class="card__text readable-panel">
                   涉及交付質量、售後響應或合約爭議。投訴直接進入質保部門，
                   由部門主管跟進，不經銷售團隊轉手。
                 </p>
@@ -541,12 +539,12 @@
                     <label class="field__label" for="p-msg">投訴內容 <span class="req">*</span></label>
                     <textarea class="textarea" id="p-msg" name="complaint" data-rule="required|minLen:20"
                       placeholder="請說明發生經過、涉及的設備編號與期望的處理方式"></textarea>
-                    <span class="field__hint">我們會在 1 個工作日內致電確認。</span>
+                    <span class="field__hint readable-panel">我們會在 1 個工作日內致電確認。</span>
                     <span class="field__error"></span>
                   </div>
 
                   <button class="btn btn--danger" type="submit">提交投訴</button>
-                  <p class="form-note">
+                  <p class="form-note readable-panel">
                     示範站點不會實際送出投訴。正式渠道請致電
                     <span class="mono">+852 3180 2468</span>。
                   </p>
@@ -685,7 +683,7 @@
   });
 })();
 </script>
-<script src="assets/js/main.js?v=shuffle1"></script>
+<script src="assets/js/main.js?v=railRoll1"></script>
 
 <script src="assets/js/auth.js"></script>
 <script>

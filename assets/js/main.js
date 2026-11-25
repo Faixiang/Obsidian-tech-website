@@ -1100,6 +1100,15 @@
     var a = li.querySelector('a');
     if (!a) continue;
     a.removeAttribute('aria-current');
+    a.classList.add('rail__link');
+    /* 翻滾用：data-ink 供 ::after 顯示深色文字副本 */
+    var label = (a.textContent || '').trim();
+    a.setAttribute('data-ink', label);
+    a.textContent = '';
+    var base = document.createElement('span');
+    base.className = 'rail__base';
+    base.textContent = label;
+    a.appendChild(base);
     if (a.getAttribute('href') === here) {
       a.setAttribute('aria-current', 'page');
       a.classList.add('is-current');
@@ -1123,9 +1132,14 @@
       var sli = document.createElement('li');
       var sa = document.createElement('a');
       sa.href = '#' + sections[s].id;
-      sa.textContent = sections[s].label;
+      sa.className = 'rail__link';
       sa.setAttribute('title', sections[s].label);   /* 截斷時可看到全文 */
+      sa.setAttribute('data-ink', sections[s].label);
       sa.setAttribute('data-rail-anchor', sections[s].id);
+      var sbase = document.createElement('span');
+      sbase.className = 'rail__base';
+      sbase.textContent = sections[s].label;
+      sa.appendChild(sbase);
       sli.appendChild(sa);
       secList.appendChild(sli);
     }

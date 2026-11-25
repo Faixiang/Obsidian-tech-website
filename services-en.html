@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Service plans | OBSIDIAN</title>
+<meta name="description" content="OBSIDIAN Technologies service plans: site survey and installation, cloud hosting operations, extended warranty, data migration and on-site training.">
+<link rel="icon" href="assets/img/mark.svg" type="image/svg+xml">
+<link rel="stylesheet" href="assets/css/style.css?v=lang1">
+<link rel="alternate" hreflang="zh-Hant" href="services-en.html">
+<link rel="alternate" hreflang="en" href="services-en.html">
+<link rel="stylesheet" href="assets/css/halo-bg.css?v=noHalo1">
+</head>
+<body class="has-halo-bg">
+
+<a class="skip-link" href="#main">Skip to main content</a>
+
+<canvas id="particles" aria-hidden="true"></canvas>
+
+<!-- 首頁背景影片牆 · 素材：X @poetengineer__（每條保持完整比例，可放大，由腳本排版） -->
+<div class="hero-video-bg" aria-hidden="true">
+  <div class="hero-video-bg__row">
+    <video class="hero-video-bg__item" muted loop playsinline autoplay preload="none"
+           poster="assets/video/bg-poster-A-X.jpg" data-ar="1.475">
+      <source src="assets/video/bg-loop-A-X.mp4" type="video/mp4">
+    </video>
+    <video class="hero-video-bg__item" muted loop playsinline autoplay preload="none"
+           poster="assets/video/bg-poster-B-Y.jpg" data-ar="0.7627">
+      <source src="assets/video/bg-loop-B-Y.mp4" type="video/mp4">
+    </video>
+    <video class="hero-video-bg__item" muted loop playsinline autoplay preload="none"
+           poster="assets/video/bg-poster-C.jpg" data-ar="1">
+      <source src="assets/video/bg-loop-C.mp4" type="video/mp4">
+    </video>
+    <video class="hero-video-bg__item" muted loop playsinline autoplay preload="none"
+           poster="assets/video/bg-poster-D.jpg" data-ar="1">
+      <source src="assets/video/bg-loop-D.mp4" type="video/mp4">
+    </video>
+    <video class="hero-video-bg__item" muted loop playsinline autoplay preload="none"
+           poster="assets/video/bg-poster-E.jpg" data-ar="1">
+      <source src="assets/video/bg-loop-E.mp4" type="video/mp4">
+    </video>
+    <video class="hero-video-bg__item" muted loop playsinline autoplay preload="none"
+           poster="assets/video/bg-poster-F.jpg" data-ar="1">
+      <source src="assets/video/bg-loop-F.mp4" type="video/mp4">
+    </video>
+    <video class="hero-video-bg__item" muted loop playsinline autoplay preload="none"
+           poster="assets/video/bg-poster-G.jpg" data-ar="1">
+      <source src="assets/video/bg-loop-G.mp4" type="video/mp4">
+    </video>
+    <video class="hero-video-bg__item" muted loop playsinline autoplay preload="none"
+           poster="assets/video/bg-poster-H.jpg" data-ar="1">
+      <source src="assets/video/bg-loop-H.mp4" type="video/mp4">
+    </video>
+    <video class="hero-video-bg__item" muted loop playsinline autoplay preload="none"
+           poster="assets/video/bg-poster-I.jpg" data-ar="1">
+      <source src="assets/video/bg-loop-I.mp4" type="video/mp4">
+    </video>
+  </div>
+</div>
+
+<!-- 網格遮罩：壓在所有背景影片之上、內容之下 -->
+<div class="grid-overlay" aria-hidden="true"></div>
+
+<script>
+/* 背景影片牆排版 + 章節聯動重排
+   ------------------------------------------------------------------
+   排版：
+     1. 影片切成若干「列」，列內按各片 aspect ratio 分配寬度（加總 100%），
+        故列內永不裁切、不變形。
+     2. 列高 = 列寬 ÷ 列內比例總和；整牆自然高 Ht = 各列高之和。
+     3. 整牆等比縮放 max(1, H/Ht) 使高度填滿視口（+0.002 補次像素）。
+     4. 分列方式穷舉（256 分段 × n 旋轉）挑最接近視口高度者。
+   防跳動：
+     - 腳本緊接影片牆標記，解析階段同步執行，早於第一次繪製。
+     - CSS 預設 .hero-video-bg { opacity: 0 }，就緒後加 .is-ready。
+     - 分列結果按「視窗尺寸 + 排列簽名」快取於 sessionStorage。
+   章節聯動（新增）：
+     - 以捲動位置判斷目前落在哪個 <section>（取視口中線所屬者）。
+     - 跨到新分段時，隨機打亂影片順序並重新分列 → 背景「隨機移動」。
+     - 過程用 .is-shuffling 淡出／淡入掩護 DOM 重組，避免硬跳；
+       prefers-reduced-motion 下不做任何重排。
+*/
+(function heroVideoWall() {
+  'use strict';
+
+  var box = document.querySelector('.hero-video-bg');
+  var wall = document.querySelector('.hero-video-bg__row');
+  if (!box || !wall) return;
+
+  var vids = Array.prototype.slice.call(wall.querySelectorAll('.hero-video-bg__item'));
+  if (!vids.length) return;
+
+  var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  function arOf(v) {
+    if (v.videoWidth && v.videoHeight) return v.videoWidth / v.videoHeight;
+    return parseFloat(v.dataset.ar) || 1;
+  }
+
+  var AR = vids.map(arOf);
+  var N = AR.length;
+  var perm = AR.map(function (_, i) { return i; });   /* 目前排列順序 */
+  var lastKey = null;
+
+  function permSig() { return perm.join('-'); }
+
+  function cacheGet(key) {
+    try {
+      var raw = sessionStorage.getItem('obsidian_wall_v2_' + key);
+      if (!raw) return null;
+      var g = JSON.parse(raw);
+      return (g && g.length) ? g : null;
+    } catch (e) { return null; }
+  }
+
+  function cacheSet(key, groups) {
+    try { sessionStorage.setItem('obsidian_wall_v2_' + key, JSON.stringify(groups)); } catch (e) {}
+  }
+
+  /* 穷舉：把 perm 序列切成「連續段」，各段成列 */
+  function computeGroups(W, H) {
+    var bestErr = Infinity;
+    var best = null;
+
+    for (var rot = 0; rot < N; rot++) {
+      var order = [];
+      for (var i = 0; i < N; i++) order.push(perm[(rot + i) % N]);
+
+      for (var mask = 0; mask < (1 << (N - 1)); mask++) {
+        var gs = [];
+        var cur = [order[0]];
+        for (var j = 1; j < N; j++) {
+          if (mask & (1 << (j - 1))) { gs.push(cur); cur = [order[j]]; }
+          else cur.push(order[j]);
+        }
+        gs.push(cur);
+
+        var inv = 0;
+        for (var g = 0; g < gs.length; g++) {
+          var s = 0;
+          for (var k = 0; k < gs[g].length; k++) s += AR[gs[g][k]];
+          inv += 1 / s;
+        }
+        var err = Math.abs(W * inv - H);
+        if (err < bestErr) { bestErr = err; best = gs; }
+      }
+    }
+    return best;
+  }
+
+  function render(groups) {
+    var sig = JSON.stringify(groups);
+    if (wall.dataset.sig === sig) return;
+    wall.dataset.sig = sig;
+
+    while (wall.firstChild) wall.removeChild(wall.firstChild);
+
+    groups.forEach(function (g) {
+      var line = document.createElement('div');
+      line.className = 'hero-video-bg__line';
+
+      var sum = 0;
+      g.forEach(function (i) { sum += AR[i]; });
+
+      g.forEach(function (i) {
+        var v = vids[i];
+        v.style.width = (AR[i] / sum * 100) + '%';
+        v.style.height = 'auto';
+        line.appendChild(v);
+      });
+
+      wall.appendChild(line);
+    });
+  }
+
+  function layout(force) {
+    var W = window.innerWidth;
+    var H = window.innerHeight;
+    var key = W + 'x' + H + '|' + permSig();
+    if (!force && key === lastKey) return;
+    lastKey = key;
+
+    var groups = cacheGet(key);
+    if (!groups) {
+      groups = computeGroups(W, H);
+      if (!groups) return;
+      cacheSet(key, groups);
+    }
+
+    /* 縮放係數：任何情況都重算（含快取命中） */
+    var inv = 0;
+    groups.forEach(function (g) {
+      var s = 0;
+      g.forEach(function (i) { s += AR[i]; });
+      inv += 1 / s;
+    });
+    var k = Math.max(1, H / (W * inv) + 0.002);
+    wall.style.transform = 'translate(-50%, -50%) scale(' + k.toFixed(4) + ')';
+
+    render(groups);
+  }
+
+  /* ---------- 章節聯動：隨機重排 ---------- */
+
+  function shuffleArray(a) {
+    for (var i = a.length - 1; i > 0; i--) {
+      var j = Math.floor(Math.random() * (i + 1));
+      var t = a[i]; a[i] = a[j]; a[j] = t;
+    }
+    return a;
+  }
+
+  var shuffling = false;
+
+  function reshuffle() {
+    if (reduceMotion || shuffling) return;
+
+    var next = shuffleArray(perm.slice());
+    /* 避免洗出跟原本一樣的順序（N>1 時） */
+    var same = true;
+    for (var i = 0; i < N; i++) { if (next[i] !== perm[i]) { same = false; break; } }
+    if (same && N > 1) { next.push(next.shift()); }
+
+    shuffling = true;
+    box.classList.add('is-shuffling');          /* 淡出 */
+
+    window.setTimeout(function () {
+      perm = next;
+      lastKey = null;
+      layout(true);                              /* 重排 */
+
+      /* 等兩帧讓新寬度生效，再淡入（避免看到中間態） */
+      window.requestAnimationFrame(function () {
+        window.requestAnimationFrame(function () {
+          box.classList.remove('is-shuffling');
+          shuffling = false;
+        });
+      });
+    }, 240);
+  }
+
+  /* 取「視口中線」所在的 section 索引 */
+  var segs = [];
+  function collectSegs() {
+    segs = [];
+    var list = document.querySelectorAll('section, .page-header, .page-head');
+    for (var i = 0; i < list.length; i++) {
+      var el = list[i];
+      if (el.getBoundingClientRect().height < 120) continue;
+      if (el.closest('.hero-video-bg')) continue;
+      segs.push(el);
+    }
+  }
+
+  var currentSeg = -1;
+  var ticking = false;
+
+  function onScroll() {
+    if (ticking) return;
+    ticking = true;
+
+    window.requestAnimationFrame(function () {
+      ticking = false;
+      var mid = window.innerHeight * 0.45;
+      var idx = -1;
+
+      for (var i = 0; i < segs.length; i++) {
+        var r = segs[i].getBoundingClientRect();
+        if (r.top <= mid && r.bottom > mid) { idx = i; break; }
+      }
+      if (idx === -1) return;
+
+      if (currentSeg === -1) { currentSeg = idx; return; }   /* 首次不重排 */
+      if (idx !== currentSeg) { currentSeg = idx; reshuffle(); }
+    });
+  }
+
+  /* ---------- 啟動 ---------- */
+
+  layout(true);
+  box.classList.add('is-ready');
+
+  /* 本腳本緊接影片牆、於 <body> 前段執行，此時 <section> 尚未解析完，
+     因此章節清單必須等 DOM 就緒後（及資源載入後版面穩定時）再收集。 */
+  collectSegs();
+  document.addEventListener('DOMContentLoaded', collectSegs);
+  window.addEventListener('load', function () { collectSegs(); onScroll(); });
+
+  window.addEventListener('scroll', onScroll, { passive: true });
+
+  var rt;
+  window.addEventListener('resize', function () {
+    clearTimeout(rt);
+    rt = setTimeout(function () {
+      lastKey = null;
+      layout(true);
+      collectSegs();
+    }, 150);
+  });
+})();
+</script>
+
+
+
+
+<div class="ann-bar">
+  <div class="ann-bar__track">
+    <span><b>SYS</b> All devices online · 99.9% connectivity</span>
+    <span><b>NET</b> G3 gateway passed environmental reliability test · 720 hours uninterrupted</span>
+    <span><b>FW</b> S1 firmware v2.4.1 released</span>
+    <span><b>OPS</b> Cloud hosting service operating normally</span>
+    <span><b>SYS</b> All devices online · 99.9% connectivity</span>
+    <span><b>NET</b> G3 gateway passed environmental reliability test · 720 hours uninterrupted</span>
+    <span><b>FW</b> S1 firmware v2.4.1 released</span>
+    <span><b>OPS</b> Cloud hosting service operating normally</span>
+  </div>
+</div>
+
+<header class="site-header">
+  <div class="scroll-progress" aria-hidden="true"></div>
+  <div class="container site-header__inner">
+    <a class="brand" href="index-en.html"><img src="assets/img/logo.svg" width="800" height="208" alt="OBSIDIAN"></a>
+    <button class="nav__toggle" type="button" aria-expanded="false" aria-controls="site-nav" aria-label="Open navigation"><span></span></button>
+    <nav class="nav" id="site-nav" aria-label="Main navigation">
+      <ul class="nav__list">
+        <li><a class="nav__link" href="about-en.html">About</a></li>
+        <li><a class="nav__link" href="products-en.html">Products</a></li>
+        <li><a class="nav__link" href="services-en.html">Services</a></li>
+        <li><a class="nav__link" href="support-en.html">Support</a></li>
+        <li><a class="nav__link" href="news-en.html">News</a></li>
+        <li><a class="nav__link" href="contact-en.html">Contact</a></li>
+      </ul>
+    </nav>
+<div class="hdr-actions">
+      <a class="lang-switch" href="services.html" hreflang="zh-Hant" lang="zh-Hant" aria-label="切換至中文版" title="切換至中文版">中文</a>
+      <a class="hdr-cart" href="cart-en.html" aria-label="Purchase order">
+        <span class="hdr-cart__icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 3h2.2l2.3 11.2a1.6 1.6 0 0 0 1.6 1.3h8.9a1.6 1.6 0 0 0 1.6-1.3L21 7H6"/><circle cx="9.5" cy="19.2" r="1.5" fill="currentColor" stroke="none"/><circle cx="17" cy="19.2" r="1.5" fill="currentColor" stroke="none"/></svg></span>
+        <span class="hdr-cart__count" data-cart-count hidden>0</span>
+      </a>
+
+      <a class="btn btn--secondary" href="login-en.html" data-guest-box>Sign in</a>
+
+      <div class="hdr-user" data-session-box hidden>
+        <span class="hdr-user__name" data-session-name></span>
+        <button class="hdr-user__out" type="button" data-logout>Sign out</button>
+      </div>
+    </div>
+  </div>
+</header>
+
+<main id="main">
+
+  <section class="page-header" style="padding-top:calc(var(--nav-total) + var(--s8))">
+    <div class="container">
+      <nav class="more" aria-label="Breadcrumb"><a href="index-en.html">Home</a><span>/</span>Service plans</nav>
+      <h1 class="h-page">Service plans</h1>
+      <p class="readable-panel" class="page-back" style="display:block;margin-top:0">
+        Work after delivery is written into the contract too. The five services below can be bought individually or in the same order as the hardware.
+      </p>
+    </div>
+  </section>
+
+  <!-- ================= 收費總覽 ================= -->
+  <section class="section bg-night">
+    <div class="container">
+      <div class="section-head">
+        <span class="block-no">01</span>
+        <h2 class="h2">Pricing overview</h2>
+        <p class="section-head__sub readable-panel">Prices in HKD, excluding one-off installation from 2016.</p>
+      </div>
+
+      <div class="table-scroll readable-panel readable-panel--table">
+        <table class="table">
+          <caption class="visually-hidden">Service pricing at a glance</caption>
+          <thead>
+            <tr>
+              <th scope="col">Services</th>
+              <th scope="col">What's included</th>
+              <th scope="col">Charge</th>
+              <th scope="col">Notes</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <th scope="row">Standard installation</th>
+              <td>Site survey, point confirmation, installation and commissioning</td>
+              <td class="mono">With hardware order</td>
+              <td>Included in quotation</td>
+            </tr>
+            <tr>
+              <th scope="row">Cloud hosting</th>
+              <td>Device health checks, firmware updates, alert delivery</td>
+              <td class="mono">HK$48 / unit / month</td>
+              <td>Cancel anytime</td>
+            </tr>
+            <tr>
+              <th scope="row">Extended warranty</th>
+              <td>Warranty extended from 24 to 60 months</td>
+              <td class="mono">18% of list price</td>
+              <td>On-site replacement included</td>
+            </tr>
+            <tr>
+              <th scope="row">Data migration</th>
+              <td>Import historical readings from your existing system</td>
+              <td class="mono">From HK$2,400</td>
+              <td>Original format required</td>
+            </tr>
+            <tr>
+              <th scope="row">On-site training</th>
+              <td>Operation and troubleshooting for maintenance staff</td>
+              <td class="mono">HK$3,200 / session</td>
+              <td>4 hours per session</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="notice notice--info mt-8">
+        <span>
+          <strong>The limits of cloud hosting</strong><br>
+          The hosting plan covers platform operation and email notifications, not on-site visits. On-site work involving equipment rooms is charged by actual hours.
+        </span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= 服務細節 ================= -->
+  <section class="section bg-slate">
+    <div class="container">
+      <div class="section-head">
+        <span class="block-no">02</span>
+        <h2 class="h2">Service details</h2>
+        <p class="section-head__sub readable-panel">We state what is not included, so there is no ambiguity after handover.</p>
+      </div>
+
+      <div class="grid grid--2">
+        <article class="card" data-reveal>
+          <div class="card__body">
+            <span class="card__no">SERVICE 01</span>
+            <h3 class="card__title">Site survey and installation</h3>
+            <p class="card__text readable-panel">
+              On-site measurement of points, confirmation of power and network routing, then installation after the point layout is issued.
+            </p>
+            <h4 class="h4 mt-4">Included</h4>
+            <ul class="tick-list mt-2">
+              <li>Site survey and point layout (issued within 3 business days)</li>
+              <li>Device installation, wiring and commissioning</li>
+              <li>Follow-up observation within 7 days of installation</li>
+            </ul>
+            <h4 class="h4 mt-6">Not included</h4>
+            <ul class="tick-list mt-2">
+              <li>Civil works drilling and repair</li>
+              <li>Distribution board changes and utility applications</li>
+              <li>Customer-supplied network cabling</li>
+            </ul>
+          </div>
+        </article>
+
+        <article class="card" data-reveal>
+          <div class="card__body">
+            <span class="card__no">SERVICE 02</span>
+            <h3 class="card__title">Cloud hosting operations</h3>
+            <p class="card__text readable-panel">
+              Optional monthly plan with device health checks, firmware updates and alert delivery.
+            </p>
+            <h4 class="h4 mt-4">Included</h4>
+            <ul class="tick-list mt-2">
+              <li>Daily health checks and offline alerts</li>
+              <li>Firmware version management and staged rollouts</li>
+              <li>Email tickets with response-time tracking</li>
+            </ul>
+            <h4 class="h4 mt-6">Not included</h4>
+            <ul class="tick-list mt-2">
+              <li>On-site visits and equipment room work</li>
+              <li>Custom integration with customer IT systems</li>
+              <li>Third-party cloud service fees</li>
+            </ul>
+          </div>
+        </article>
+
+        <article class="card" data-reveal>
+          <div class="card__body">
+            <span class="card__no">SERVICE 03</span>
+            <h3 class="card__title">Extended warranty</h3>
+            <p class="card__text readable-panel">
+              Standard warranty 24 months, extendable to 60 months, including on-site replacement and spare parts shipping.
+            </p>
+            <h4 class="h4 mt-4">Included</h4>
+            <ul class="tick-list mt-2">
+              <li>On-site replacement and spare parts shipping</li>
+              <li>Excludes human damage (inspection record required)</li>
+              <li>Automatic escalation after two failures of the same fault</li>
+            </ul>
+            <h4 class="h4 mt-6">Not included</h4>
+            <ul class="tick-list mt-2">
+              <li>Damage caused by installation outside the datasheet</li>
+              <li>Unauthorised disassembly or repair</li>
+              <li>Force majeure (lightning, flooding, etc.)</li>
+            </ul>
+          </div>
+        </article>
+
+        <article class="card" data-reveal>
+          <div class="card__body">
+            <span class="card__no">SERVICE 04</span>
+            <h3 class="card__title">Data migration and training</h3>
+            <p class="card__text readable-panel">
+              Import historical readings from your existing system and train your maintenance staff.
+            </p>
+            <h4 class="h4 mt-4">Included</h4>
+            <ul class="tick-list mt-2">
+              <li>Historical data parsing and format standardisation</li>
+              <li>Post-import reconciliation and variance report</li>
+              <li>4 hours of on-site training per session</li>
+            </ul>
+            <h4 class="h4 mt-6">Not included</h4>
+            <ul class="tick-list mt-2">
+              <li>Repair and re-entry of records from the original system</li>
+              <li>Permission changes in the customer's system</li>
+              <li>Translation and localisation of training material</li>
+            </ul>
+          </div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= 響應時效 ================= -->
+  <section class="section bg-night">
+    <div class="container">
+      <div class="section-head">
+        <span class="block-no">03</span>
+        <h2 class="h2">Response times</h2>
+        <p class="section-head__sub readable-panel">Weekdays 9:00–18:00; public holidays as agreed in the contract.</p>
+      </div>
+
+      <div class="table-scroll readable-panel readable-panel--table">
+        <table class="table">
+          <caption class="visually-hidden">Response times by issue type</caption>
+          <thead>
+            <tr>
+              <th scope="col">Issue type</th>
+              <th scope="col">First response</th>
+              <th scope="col">On-site time</th>
+              <th scope="col">Target outcome</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <th scope="row">Entire device line offline</th>
+              <td class="mono">30 minutes</td>
+              <td class="mono">4 hours</td>
+              <td>Restored or a workaround provided within 2 hours</td>
+            </tr>
+            <tr>
+              <th scope="row">Single device abnormal</th>
+              <td class="mono">2 hours</td>
+              <td class="mono">1 business day</td>
+              <td>Handled or replaced the same day</td>
+            </tr>
+            <tr>
+              <th scope="row">Data anomaly</th>
+              <td class="mono">4 hours</td>
+              <td class="mono">—</td>
+              <td>Data reconciliation within 1 business day</td>
+            </tr>
+            <tr>
+              <th scope="row">Enquiries and quotations</th>
+              <td class="mono">—</td>
+              <td class="mono">—</td>
+              <td>Reply within 2 business days</td>
+            </tr>
+            <tr>
+              <th scope="row">Complaint</th>
+              <td class="mono">1 business day</td>
+              <td class="mono">—</td>
+              <td>Followed by the warranty manager through to closure</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <section class="cta-band">
+    <div class="container cta-band__inner">
+      <div>
+        <h2 class="cta-band__title">Need a configuration proposal?</h2>
+        <p class="cta-band__text">Tell us your point count and site conditions and we'll send a list and a quotation.</p>
+      </div>
+      <div style="display:flex;gap:var(--s3);flex-wrap:wrap">
+        <a class="btn btn--primary" href="contact-en.html">Contact us</a>
+        <a class="btn btn--secondary" href="support-en.html">Technical support</a>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer class="site-footer">
+  <div class="ft-inner">
+    <div class="ft-top">
+      <div class="ft-brand">
+        <img src="assets/img/logo.svg" alt="OBSIDIAN" width="800" height="208" loading="lazy">
+        <p class="ft-slogan">Reliable connectivity for every device</p>
+        <p class="ft-desc">
+          OBSIDIAN Technologies · Founded 2016 at Hong Kong Science Park<br>
+          Focused on industrial and residential IoT: sensing, edge connectivity and energy management.
+        </p>
+      </div>
+      <div class="ft-col">
+        <h4>Products</h4>
+        <a href="products-en.html">Environmental Sensor S1</a>
+        <a href="products-en.html">Smart Gateway G2</a>
+        <a href="products-en.html">Energy Management Kit E3</a>
+        <a href="services-en.html">Service plans</a>
+      </div>
+      <div class="ft-col">
+        <h4>Company</h4>
+        <a href="about-en.html">About us</a>
+        <a href="news-en.html">Company news</a>
+        <a href="careers-en.html">Careers</a>
+        <a href="sitemap-en.html">Sitemap</a>
+      </div>
+      <div class="ft-col">
+        <h4>Support</h4>
+        <a href="support-en.html">Technical support</a>
+        <a href="contact-en.html">Contact us</a>
+        <a href="login-en.html">Customer sign-in</a>
+        <a href="register-en.html">Create account</a>
+      </div>
+    </div>
+    <div class="ft-rule"></div>
+    <div class="ft-bottom">
+      <span>© <span data-year>2026</span> OBSIDIAN Technologies Ltd.</span>
+      <span class="ft-final">OBSIDIAN TECHNOLOGIES · CIS222 GROUP PROJECT</span>
+      <span>Hong Kong Science Park</span>
+    </div>
+  </div>
+</footer>
+
+<div class="toast" role="status" aria-live="polite"></div>
+<script>
+/* Background: .obsidian-bg is injected by main.js (CSS layers only).
+   Keep the legacy #particles canvas inert so only one rAF loop runs. */
+(function () {
+  var p = document.getElementById("particles");
+  if (p) { p.id = "particles-off"; p.setAttribute("hidden", ""); }
+})();
+</script>
+<script>
+/* 首頁背景影片：減少動效偏好下不播放；切換分頁時暫停，避免後台空耗 */
+(function () {
+  var vids = document.querySelectorAll('.hero-video-bg video');
+  if (!vids.length) return;
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  function playAll() {
+    Array.prototype.forEach.call(vids, function (v) {
+      v.play().catch(function () { /* 自動播放被攔截時保留海報圖 */ });
+    });
+  }
+  playAll();
+  document.addEventListener('visibilitychange', function () {
+    Array.prototype.forEach.call(vids, function (v) {
+      if (document.hidden) { v.pause(); }
+      else { v.play().catch(function () {}); }
+    });
+  });
+})();
+</script>
+<script src="assets/js/main.js?v=railRoll1"></script>
+
+</body>
+</html>

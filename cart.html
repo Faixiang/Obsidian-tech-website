@@ -6,10 +6,7 @@
 <title>購物車 | 曜石</title>
 <meta name="description" content="曜石智能科技產品購物車，可調整數量並提交模擬訂單。">
 <link rel="icon" href="assets/img/mark.svg" type="image/svg+xml">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;600;700;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="assets/css/style.css?v=whiteAll3">
+<link rel="stylesheet" href="assets/css/style.css?v=lang1">
 <link rel="stylesheet" href="assets/css/halo-bg.css?v=noHalo1">
 </head>
 <body class="has-halo-bg">
@@ -334,6 +331,7 @@
       </ul>
     </nav>
 <div class="hdr-actions">
+      <a class="lang-switch" href="cart-en.html" hreflang="en" lang="en" aria-label="Switch to English version" title="Switch to English version">EN</a>
       <a class="hdr-cart" href="cart.html" aria-label="採購單">
         <span class="hdr-cart__icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 3h2.2l2.3 11.2a1.6 1.6 0 0 0 1.6 1.3h8.9a1.6 1.6 0 0 0 1.6-1.3L21 7H6"/><circle cx="9.5" cy="19.2" r="1.5" fill="currentColor" stroke="none"/><circle cx="17" cy="19.2" r="1.5" fill="currentColor" stroke="none"/></svg></span>
         <span class="hdr-cart__count" data-cart-count hidden>0</span>
@@ -371,7 +369,7 @@
 
         <div>
           <div data-cart-table hidden>
-            <div class="table-scroll">
+            <div class="table-scroll readable-panel readable-panel--table">
               <table class="table">
                 <caption class="visually-hidden">購物車商品明細</caption>
                 <thead>
@@ -396,7 +394,7 @@
           <div data-cart-empty class="card">
             <div class="card__body text-center">
               <h2 class="h3">購物車是空的</h2>
-              <p class="card__text">你還沒有加入任何設備。</p>
+              <p class="card__text readable-panel">你還沒有加入任何設備。</p>
               <a class="btn btn--primary mt-4" href="products.html">前往產品頁</a>
             </div>
           </div>
@@ -447,7 +445,7 @@
                 </div>
 
                 <button class="btn btn--primary btn--block" type="submit">提交訂單（模擬）</button>
-                <p class="form-note">不會跳轉至任何支付頁面，也不會扣款。</p>
+                <p class="form-note readable-panel">不會跳轉至任何支付頁面，也不會扣款。</p>
               </form>
             </div>
           </div>
@@ -530,7 +528,7 @@
   });
 })();
 </script>
-<script src="assets/js/main.js?v=shuffle1"></script>
+<script src="assets/js/main.js?v=railRoll1"></script>
 
 <script src="assets/js/auth.js"></script>
 <script src="assets/js/cart.js"></script>

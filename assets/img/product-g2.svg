@@ -1,41 +1,37 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 480" width="640" height="480" role="img" aria-label="智能網關 G2 產品圖">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 480" width="640" height="480" role="img" aria-label="智能網關 G2 工業渲染圖">
   <title>智能網關 G2</title>
   <defs>
-    <linearGradient id="bgG2" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#1C2530"/>
-      <stop offset="1" stop-color="#0B1F3A"/>
-    </linearGradient>
-    <linearGradient id="litG2" x1="0" y1="0" x2="1" y2="0">
-      <stop offset="0" stop-color="#00D4B8" stop-opacity="0.28"/>
-      <stop offset="1" stop-color="#00D4B8" stop-opacity="0"/>
-    </linearGradient>
+    <radialGradient id="g2-bg" cx="50%" cy="42%" r="75%"><stop stop-color="#16294A"/><stop offset="1" stop-color="#02020A"/></radialGradient>
+    <linearGradient id="g2-front" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#34485B"/><stop offset=".5" stop-color="#1C2530"/><stop offset="1" stop-color="#0B1420"/></linearGradient>
+    <linearGradient id="g2-side" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#16294A"/><stop offset="1" stop-color="#070D16"/></linearGradient>
+    <linearGradient id="g2-top" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#41566A"/><stop offset=".45" stop-color="#1E2A44"/><stop offset="1" stop-color="#101A28"/></linearGradient>
+    <linearGradient id="g2-metal" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#A9BBC9"/><stop offset=".25" stop-color="#3D5267"/><stop offset="1" stop-color="#0B1420"/></linearGradient>
+    <filter id="g2-shadow"><feGaussianBlur stdDeviation="10"/></filter>
+    <filter id="g2-glow"><feGaussianBlur stdDeviation="5"/></filter>
+    <radialGradient id="g2-led"><stop stop-color="#F5F7FA"/><stop offset=".2" stop-color="#00D4B8"/><stop offset="1" stop-color="#00D4B8" stop-opacity="0"/></radialGradient>
   </defs>
-  <rect width="640" height="480" fill="url(#bgG2)"/>
-  <g stroke="#00D4B8" stroke-opacity="0.09" stroke-width="1">
-    <path d="M0 120H640M0 240H640M0 360H640M160 0V480M320 0V480M480 0V480"/>
+  <rect width="640" height="480" fill="url(#g2-bg)"/>
+  <ellipse cx="320" cy="386" rx="180" ry="22" fill="#000" opacity=".58" filter="url(#g2-shadow)"/>
+  <g transform="translate(320 230)">
+    <path d="M-150-60L106-60 150-34 150 76 106 104-150 104-166 78-166-38Z" fill="url(#g2-side)" stroke="#05050F" stroke-width="4" stroke-linejoin="round"/>
+    <path d="M-150-60L106-60 128-40 128 72 106 104-150 104-150-60Z" fill="url(#g2-front)" stroke="#F5F7FA" stroke-opacity=".13" stroke-width="2"/>
+    <path d="M-150-60L106-60 128-40-150-40Z" fill="url(#g2-top)" stroke="#F5F7FA" stroke-opacity=".18" stroke-width="2"/>
+    <path d="M106-60V104" stroke="#00D4B8" stroke-opacity=".2" stroke-width="2"/>
+    <g fill="#1E2A44" stroke="#7B879B" stroke-opacity=".38" stroke-width="1"><circle cx="-130" cy="-43" r="5"/><circle cx="108" cy="-43" r="5"/><circle cx="-130" cy="86" r="5"/><circle cx="108" cy="86" r="5"/></g>
+    <g stroke="#0B1420" stroke-width="3" stroke-linecap="round" opacity=".85">
+      <path d="M-92-50L-62-18M-70-50L-40-18M-48-50L-18-18M-26-50L4-18M-4-50L26-18M18-50L48-18M40-50L70-18M62-50L92-18M84-50L112-22"/>
+    </g>
+    <g transform="translate(-115 18)">
+      <rect x="0" y="0" width="42" height="28" rx="4" fill="url(#g2-metal)" stroke="#F5F7FA" stroke-opacity=".2"/>
+      <rect x="49" y="0" width="42" height="28" rx="4" fill="url(#g2-metal)" stroke="#F5F7FA" stroke-opacity=".2"/>
+      <rect x="98" y="0" width="42" height="28" rx="4" fill="url(#g2-metal)" stroke="#F5F7FA" stroke-opacity=".2"/>
+      <rect x="147" y="0" width="42" height="28" rx="4" fill="url(#g2-metal)" stroke="#F5F7FA" stroke-opacity=".2"/>
+      <g stroke="#05050F" stroke-width="2"><path d="M8 10h26M57 10h26M106 10h26M155 10h26"/><path d="M13 18h16M62 18h16M111 18h16M160 18h16"/></g>
+      <g fill="#00D4B8" opacity=".65"><circle cx="8" cy="23" r="2"/><circle cx="57" cy="23" r="2"/><circle cx="106" cy="23" r="2"/><circle cx="155" cy="23" r="2"/></g>
+    </g>
+    <g transform="translate(70 22)"><circle cx="0" cy="0" r="21" fill="#0B1420" stroke="#00D4B8" stroke-opacity=".75" stroke-width="2"/><circle cx="0" cy="0" r="10" fill="none" stroke="#7B879B" stroke-width="2"/><path d="M0-12V0l8 6" stroke="#00D4B8" stroke-width="2" fill="none"/><circle cx="0" cy="0" r="4" fill="#00D4B8"/></g>
+    <g transform="translate(48 76)"><circle cx="0" cy="0" r="5" fill="url(#g2-led)"/><circle cx="0" cy="0" r="3" fill="#00D4B8"/><circle cx="22" cy="0" r="5" fill="#2ECC8F"/><circle cx="44" cy="0" r="5" fill="#2ECC8F"/><circle cx="66" cy="0" r="5" fill="#2ECC8F"/></g>
+    <path d="M148 26h15v36h-15" fill="#070D16" stroke="#1E2A44" stroke-width="2"/><path d="M152 34h7M152 44h7M152 54h7" stroke="#00D4B8" stroke-opacity=".4" stroke-width="2"/>
+    <text x="40" y="93" fill="#7B879B" opacity=".7" font-family="Arial,Helvetica,sans-serif" font-size="13" letter-spacing=".04em">G2</text>
   </g>
-  <g transform="translate(320 236)">
-    <rect x="-140" y="-86" width="280" height="172" rx="18" fill="#28323E" stroke="#3D4A59" stroke-width="2"/>
-    <rect x="-140" y="-86" width="140" height="172" rx="18" fill="url(#litG2)"/>
-    <g stroke="#8A94A6" stroke-width="2" stroke-linecap="round">
-      <path d="M-108 -44h60M-108 -20h60M-108 4h60"/>
-    </g>
-    <g stroke="#00D4B8" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
-      <circle cx="60" cy="-30" r="26"/>
-      <path d="M60 -46v16M60 2v16M42 -30h16M62 -30h16"/>
-    </g>
-    <g fill="#00D4B8">
-      <circle cx="60" cy="42" r="5"/>
-    </g>
-    <g fill="#2ECC8F">
-      <circle cx="-4" cy="42" r="5"/>
-      <circle cx="18" cy="42" r="5"/>
-    </g>
-    <g stroke="#8A94A6" stroke-width="2" stroke-linecap="round">
-      <path d="M48 42h-38M96 42h26"/>
-    </g>
-    <text x="0" y="128" text-anchor="middle" font-family="Consolas, monospace" font-size="15" letter-spacing="3" fill="#8A94A6">G2</text>
-  </g>
-  <text x="48" y="424" font-family="Noto Sans SC, sans-serif" font-size="24" font-weight="600" fill="#F5F7FA">智能網關 G2</text>
-  <text x="48" y="450" font-family="Noto Sans SC, sans-serif" font-size="14" fill="#8A94A6">8 設備並發 / 本地邊緣存儲</text>
 </svg>

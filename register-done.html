@@ -6,10 +6,7 @@
 <title>註冊成功 | 曜石</title>
 <meta name="robots" content="noindex">
 <link rel="icon" href="assets/img/mark.svg" type="image/svg+xml">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;600;700;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="assets/css/style.css?v=whiteAll3">
+<link rel="stylesheet" href="assets/css/style.css?v=lang1">
 <link rel="stylesheet" href="assets/css/halo-bg.css?v=noHalo1">
 </head>
 <body class="has-halo-bg">
@@ -334,6 +331,7 @@
       </ul>
     </nav>
 <div class="hdr-actions">
+      <a class="lang-switch" href="register-done-en.html" hreflang="en" lang="en" aria-label="Switch to English version" title="Switch to English version">EN</a>
       <a class="hdr-cart" href="cart.html" aria-label="採購單">
         <span class="hdr-cart__icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 3h2.2l2.3 11.2a1.6 1.6 0 0 0 1.6 1.3h8.9a1.6 1.6 0 0 0 1.6-1.3L21 7H6"/><circle cx="9.5" cy="19.2" r="1.5" fill="currentColor" stroke="none"/><circle cx="17" cy="19.2" r="1.5" fill="currentColor" stroke="none"/></svg></span>
         <span class="hdr-cart__count" data-cart-count hidden>0</span>
@@ -365,7 +363,7 @@
         <div class="card">
           <div class="card__body">
             <h2 class="h3 mb-6">你的註冊資料</h2>
-            <div class="table-scroll">
+            <div class="table-scroll readable-panel readable-panel--table">
               <table class="table">
                 <caption class="visually-hidden">註冊資料明細</caption>
                 <tbody id="regRows"></tbody>
@@ -391,7 +389,7 @@
           <div class="card mt-8">
             <div class="card__body">
               <h3 class="card__title">為什麼要核對？</h3>
-              <p class="card__text">
+              <p class="card__text readable-panel">
                 本頁是註冊流程的<strong>資訊展示頁</strong>：表單頁負責收集，
                 本頁負責回顯，兩者通過瀏覽器儲存傳遞數據。
                 真實系統裡這一步由服務器回傳並寫入數據庫。
@@ -402,7 +400,7 @@
           <div class="card mt-6">
             <div class="card__body">
               <h3 class="card__title">清空本機記錄</h3>
-              <p class="card__text">若在共用電腦示範，可手動清除這份資料。</p>
+              <p class="card__text readable-panel">若在共用電腦示範，可手動清除這份資料。</p>
               <button class="btn btn--ghost btn--block" type="button" id="clearBtn">清除瀏覽器內的註冊資料</button>
             </div>
           </div>
@@ -485,7 +483,7 @@
   });
 })();
 </script>
-<script src="assets/js/main.js?v=shuffle1"></script>
+<script src="assets/js/main.js?v=railRoll1"></script>
 
 <script src="assets/js/auth.js"></script>
 <script>

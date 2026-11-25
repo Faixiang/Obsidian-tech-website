@@ -1,0 +1,906 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <!-- actOff1 -->
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>OBSIDIAN | Reliable connectivity for every device</title>
+<meta name="description" content="OBSIDIAN Technologies focuses on industrial and residential IoT: Environmental Sensor S1, Smart Gateway G2 and Energy Management Kit E3.">
+<link rel="icon" href="assets/img/mark.svg" type="image/svg+xml">
+<link rel="stylesheet" href="assets/css/style.css?v=lang1">
+<link rel="alternate" hreflang="zh-Hant" href="index-en.html">
+<link rel="alternate" hreflang="en" href="index-en.html">
+<link rel="stylesheet" href="assets/css/halo-bg.css?v=noHalo1">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  "name": "OBSIDIAN Technologies Ltd.",
+  "alternateName": "OBSIDIAN Technologies",
+  "foundingDate": "2016",
+  "description": "Industrial and residential IoT with three product lines: Environmental Sensor S1, Smart Gateway G2 and Energy Management Kit E3.",
+  "address": { "@type": "PostalAddress", "addressCountry": "HK", "addressLocality": "Hong Kong Science Park" }
+}
+</script>
+</head>
+<body class="has-halo-bg">
+<a class="skip-link" href="#main">Skip to main content</a>
+
+<!-- 首頁背景影片牆 · 素材：X @poetengineer__（每條保持完整比例，可放大，由腳本排版） -->
+<div class="hero-video-bg" aria-hidden="true">
+  <div class="hero-video-bg__row">
+    <video class="hero-video-bg__item" muted loop playsinline autoplay preload="none"
+           poster="assets/video/bg-poster-A-X.jpg" data-ar="1.475">
+      <source src="assets/video/bg-loop-A-X.mp4" type="video/mp4">
+    </video>
+    <video class="hero-video-bg__item" muted loop playsinline autoplay preload="none"
+           poster="assets/video/bg-poster-B-Y.jpg" data-ar="0.7627">
+      <source src="assets/video/bg-loop-B-Y.mp4" type="video/mp4">
+    </video>
+    <video class="hero-video-bg__item" muted loop playsinline autoplay preload="none"
+           poster="assets/video/bg-poster-C.jpg" data-ar="1">
+      <source src="assets/video/bg-loop-C.mp4" type="video/mp4">
+    </video>
+    <video class="hero-video-bg__item" muted loop playsinline autoplay preload="none"
+           poster="assets/video/bg-poster-D.jpg" data-ar="1">
+      <source src="assets/video/bg-loop-D.mp4" type="video/mp4">
+    </video>
+    <video class="hero-video-bg__item" muted loop playsinline autoplay preload="none"
+           poster="assets/video/bg-poster-E.jpg" data-ar="1">
+      <source src="assets/video/bg-loop-E.mp4" type="video/mp4">
+    </video>
+    <video class="hero-video-bg__item" muted loop playsinline autoplay preload="none"
+           poster="assets/video/bg-poster-F.jpg" data-ar="1">
+      <source src="assets/video/bg-loop-F.mp4" type="video/mp4">
+    </video>
+    <video class="hero-video-bg__item" muted loop playsinline autoplay preload="none"
+           poster="assets/video/bg-poster-G.jpg" data-ar="1">
+      <source src="assets/video/bg-loop-G.mp4" type="video/mp4">
+    </video>
+    <video class="hero-video-bg__item" muted loop playsinline autoplay preload="none"
+           poster="assets/video/bg-poster-H.jpg" data-ar="1">
+      <source src="assets/video/bg-loop-H.mp4" type="video/mp4">
+    </video>
+    <video class="hero-video-bg__item" muted loop playsinline autoplay preload="none"
+           poster="assets/video/bg-poster-I.jpg" data-ar="1">
+      <source src="assets/video/bg-loop-I.mp4" type="video/mp4">
+    </video>
+  </div>
+</div>
+
+<!-- 網格遮罩：壓在所有背景影片之上、內容之下 -->
+<div class="grid-overlay" aria-hidden="true"></div>
+
+<script>
+/* 背景影片牆排版 + 章節聯動重排
+   ------------------------------------------------------------------
+   排版：
+     1. 影片切成若干「列」，列內按各片 aspect ratio 分配寬度（加總 100%），
+        故列內永不裁切、不變形。
+     2. 列高 = 列寬 ÷ 列內比例總和；整牆自然高 Ht = 各列高之和。
+     3. 整牆等比縮放 max(1, H/Ht) 使高度填滿視口（+0.002 補次像素）。
+     4. 分列方式穷舉（256 分段 × n 旋轉）挑最接近視口高度者。
+   防跳動：
+     - 腳本緊接影片牆標記，解析階段同步執行，早於第一次繪製。
+     - CSS 預設 .hero-video-bg { opacity: 0 }，就緒後加 .is-ready。
+     - 分列結果按「視窗尺寸 + 排列簽名」快取於 sessionStorage。
+   章節聯動（新增）：
+     - 以捲動位置判斷目前落在哪個 <section>（取視口中線所屬者）。
+     - 跨到新分段時，隨機打亂影片順序並重新分列 → 背景「隨機移動」。
+     - 過程用 .is-shuffling 淡出／淡入掩護 DOM 重組，避免硬跳；
+       prefers-reduced-motion 下不做任何重排。
+*/
+(function heroVideoWall() {
+  'use strict';
+
+  var box = document.querySelector('.hero-video-bg');
+  var wall = document.querySelector('.hero-video-bg__row');
+  if (!box || !wall) return;
+
+  var vids = Array.prototype.slice.call(wall.querySelectorAll('.hero-video-bg__item'));
+  if (!vids.length) return;
+
+  var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  function arOf(v) {
+    if (v.videoWidth && v.videoHeight) return v.videoWidth / v.videoHeight;
+    return parseFloat(v.dataset.ar) || 1;
+  }
+
+  var AR = vids.map(arOf);
+  var N = AR.length;
+  var perm = AR.map(function (_, i) { return i; });   /* 目前排列順序 */
+  var lastKey = null;
+
+  function permSig() { return perm.join('-'); }
+
+  function cacheGet(key) {
+    try {
+      var raw = sessionStorage.getItem('obsidian_wall_v2_' + key);
+      if (!raw) return null;
+      var g = JSON.parse(raw);
+      return (g && g.length) ? g : null;
+    } catch (e) { return null; }
+  }
+
+  function cacheSet(key, groups) {
+    try { sessionStorage.setItem('obsidian_wall_v2_' + key, JSON.stringify(groups)); } catch (e) {}
+  }
+
+  /* 穷舉：把 perm 序列切成「連續段」，各段成列 */
+  function computeGroups(W, H) {
+    var bestErr = Infinity;
+    var best = null;
+
+    for (var rot = 0; rot < N; rot++) {
+      var order = [];
+      for (var i = 0; i < N; i++) order.push(perm[(rot + i) % N]);
+
+      for (var mask = 0; mask < (1 << (N - 1)); mask++) {
+        var gs = [];
+        var cur = [order[0]];
+        for (var j = 1; j < N; j++) {
+          if (mask & (1 << (j - 1))) { gs.push(cur); cur = [order[j]]; }
+          else cur.push(order[j]);
+        }
+        gs.push(cur);
+
+        var inv = 0;
+        for (var g = 0; g < gs.length; g++) {
+          var s = 0;
+          for (var k = 0; k < gs[g].length; k++) s += AR[gs[g][k]];
+          inv += 1 / s;
+        }
+        var err = Math.abs(W * inv - H);
+        if (err < bestErr) { bestErr = err; best = gs; }
+      }
+    }
+    return best;
+  }
+
+  function render(groups) {
+    var sig = JSON.stringify(groups);
+    if (wall.dataset.sig === sig) return;
+    wall.dataset.sig = sig;
+
+    while (wall.firstChild) wall.removeChild(wall.firstChild);
+
+    groups.forEach(function (g) {
+      var line = document.createElement('div');
+      line.className = 'hero-video-bg__line';
+
+      var sum = 0;
+      g.forEach(function (i) { sum += AR[i]; });
+
+      g.forEach(function (i) {
+        var v = vids[i];
+        v.style.width = (AR[i] / sum * 100) + '%';
+        v.style.height = 'auto';
+        line.appendChild(v);
+      });
+
+      wall.appendChild(line);
+    });
+  }
+
+  function layout(force) {
+    var W = window.innerWidth;
+    var H = window.innerHeight;
+    var key = W + 'x' + H + '|' + permSig();
+    if (!force && key === lastKey) return;
+    lastKey = key;
+
+    var groups = cacheGet(key);
+    if (!groups) {
+      groups = computeGroups(W, H);
+      if (!groups) return;
+      cacheSet(key, groups);
+    }
+
+    /* 縮放係數：任何情況都重算（含快取命中） */
+    var inv = 0;
+    groups.forEach(function (g) {
+      var s = 0;
+      g.forEach(function (i) { s += AR[i]; });
+      inv += 1 / s;
+    });
+    var k = Math.max(1, H / (W * inv) + 0.002);
+    wall.style.transform = 'translate(-50%, -50%) scale(' + k.toFixed(4) + ')';
+
+    render(groups);
+  }
+
+  /* ---------- 章節聯動：隨機重排 ---------- */
+
+  function shuffleArray(a) {
+    for (var i = a.length - 1; i > 0; i--) {
+      var j = Math.floor(Math.random() * (i + 1));
+      var t = a[i]; a[i] = a[j]; a[j] = t;
+    }
+    return a;
+  }
+
+  var shuffling = false;
+
+  function reshuffle() {
+    if (reduceMotion || shuffling) return;
+
+    var next = shuffleArray(perm.slice());
+    /* 避免洗出跟原本一樣的順序（N>1 時） */
+    var same = true;
+    for (var i = 0; i < N; i++) { if (next[i] !== perm[i]) { same = false; break; } }
+    if (same && N > 1) { next.push(next.shift()); }
+
+    shuffling = true;
+    box.classList.add('is-shuffling');          /* 淡出 */
+
+    window.setTimeout(function () {
+      perm = next;
+      lastKey = null;
+      layout(true);                              /* 重排 */
+
+      /* 等兩帧讓新寬度生效，再淡入（避免看到中間態） */
+      window.requestAnimationFrame(function () {
+        window.requestAnimationFrame(function () {
+          box.classList.remove('is-shuffling');
+          shuffling = false;
+        });
+      });
+    }, 240);
+  }
+
+  /* 取「視口中線」所在的 section 索引 */
+  var segs = [];
+  function collectSegs() {
+    segs = [];
+    var list = document.querySelectorAll('section, .page-header, .page-head');
+    for (var i = 0; i < list.length; i++) {
+      var el = list[i];
+      if (el.getBoundingClientRect().height < 120) continue;
+      if (el.closest('.hero-video-bg')) continue;
+      segs.push(el);
+    }
+  }
+
+  var currentSeg = -1;
+  var ticking = false;
+
+  function onScroll() {
+    if (ticking) return;
+    ticking = true;
+
+    window.requestAnimationFrame(function () {
+      ticking = false;
+      var mid = window.innerHeight * 0.45;
+      var idx = -1;
+
+      for (var i = 0; i < segs.length; i++) {
+        var r = segs[i].getBoundingClientRect();
+        if (r.top <= mid && r.bottom > mid) { idx = i; break; }
+      }
+      if (idx === -1) return;
+
+      if (currentSeg === -1) { currentSeg = idx; return; }   /* 首次不重排 */
+      if (idx !== currentSeg) { currentSeg = idx; reshuffle(); }
+    });
+  }
+
+  /* ---------- 啟動 ---------- */
+
+  layout(true);
+  box.classList.add('is-ready');
+
+  /* 本腳本緊接影片牆、於 <body> 前段執行，此時 <section> 尚未解析完，
+     因此章節清單必須等 DOM 就緒後（及資源載入後版面穩定時）再收集。 */
+  collectSegs();
+  document.addEventListener('DOMContentLoaded', collectSegs);
+  window.addEventListener('load', function () { collectSegs(); onScroll(); });
+
+  window.addEventListener('scroll', onScroll, { passive: true });
+
+  var rt;
+  window.addEventListener('resize', function () {
+    clearTimeout(rt);
+    rt = setTimeout(function () {
+      lastKey = null;
+      layout(true);
+      collectSegs();
+    }, 150);
+  });
+})();
+</script>
+
+
+
+
+
+<!-- 報告 §6.1：CANVAS#particles → DIV.ann-bar → HEADER → ... → FOOTER
+     The early script below renames this to #particles-off so main.js skips it. -->
+<canvas id="particles" aria-hidden="true"></canvas>
+
+<div class="ann-bar">
+  <div class="ann-bar__track">
+    <span><b>SYS</b> All devices online · 99.9% connectivity</span>
+    <span><b>NET</b> G3 gateway passed environmental reliability test · 720 hours uninterrupted</span>
+    <span><b>FW</b> S1 firmware v2.4.1 released</span>
+    <span><b>OPS</b> Cloud hosting service operating normally</span>
+    <span><b>SVC</b> Site survey slots · 3 left this week</span>
+    <span><b>QA</b> Standard warranty 24 months · extendable to 60 months</span>
+    <span><b>REG</b> 50,000+ units deployed · 4 countries and regions</span>
+    <span><b>DOC</b> S1 / G2 / E3 datasheets and wiring diagrams now online</span>
+    <span><b>OPS</b> E3 report format integrated with finance systems</span>
+    <span><b>NET</b> Average ticket response 4.2 hours this week</span>
+    <span><b>SYS</b> All devices online · 99.9% connectivity</span>
+    <span><b>NET</b> G3 gateway passed environmental reliability test · 720 hours uninterrupted</span>
+    <span><b>FW</b> S1 firmware v2.4.1 released</span>
+    <span><b>OPS</b> Cloud hosting service operating normally</span>
+    <span><b>SVC</b> Site survey slots · 3 left this week</span>
+    <span><b>QA</b> Standard warranty 24 months · extendable to 60 months</span>
+    <span><b>REG</b> 50,000+ units deployed · 4 countries and regions</span>
+    <span><b>DOC</b> S1 / G2 / E3 datasheets and wiring diagrams now online</span>
+    <span><b>OPS</b> E3 report format integrated with finance systems</span>
+    <span><b>NET</b> Average ticket response 4.2 hours this week</span>
+  </div>
+</div>
+
+<header class="site-header">
+  <div class="container site-header__inner">
+    <a class="brand" href="index-en.html">
+      <img src="assets/img/logo.svg" width="800" height="208" alt="OBSIDIAN">
+    </a>
+
+    <button class="nav__toggle" type="button" aria-expanded="false" aria-controls="site-nav" aria-label="Open navigation">
+      <span></span>
+    </button>
+
+    <nav class="nav" id="site-nav" aria-label="Main navigation">
+      <ul class="nav__list">
+        <li><a class="nav__link" href="about-en.html">About</a></li>
+        <li><a class="nav__link" href="products-en.html">Products</a></li>
+        <li><a class="nav__link" href="services-en.html">Services</a></li>
+        <li><a class="nav__link" href="support-en.html">Support</a></li>
+        <li><a class="nav__link" href="news-en.html">News</a></li>
+        <li><a class="nav__link" href="contact-en.html">Contact</a></li>
+      </ul>
+    </nav>
+
+<div class="hdr-actions">
+      <a class="lang-switch" href="index.html" hreflang="zh-Hant" lang="zh-Hant" aria-label="切換至中文版" title="切換至中文版">中文</a>
+      <a class="hdr-cart" href="cart-en.html" aria-label="Purchase order">
+        <span class="hdr-cart__icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 3h2.2l2.3 11.2a1.6 1.6 0 0 0 1.6 1.3h8.9a1.6 1.6 0 0 0 1.6-1.3L21 7H6"/><circle cx="9.5" cy="19.2" r="1.5" fill="currentColor" stroke="none"/><circle cx="17" cy="19.2" r="1.5" fill="currentColor" stroke="none"/></svg></span>
+        <span class="hdr-cart__count" data-cart-count hidden>0</span>
+      </a>
+
+      <a class="btn btn--secondary" href="login-en.html" data-guest-box>Sign in</a>
+
+      <div class="hdr-user" data-session-box hidden>
+        <span class="hdr-user__name" data-session-name></span>
+        <button class="hdr-user__out" type="button" data-logout>Sign out</button>
+      </div>
+    </div>
+  </div>
+</header>
+
+<main id="main">
+
+  <!-- ================= HERO（報告 §6.2 非對稱 1fr / 420px） ================= -->
+  <!-- ================= 主菜單式入口（新增層，不改動下方既有 Hero 結構） ================= -->
+  <section class="mn-hero">
+    <div class="container mn-hero__inner">
+
+      <div class="mn-brand">
+        <img class="mn-brand__logo" src="assets/img/logo.svg" alt="OBSIDIAN" width="800" height="208">
+        <h1 class="mn-brand__title">Reliable connectivity for every device</h1>
+        <p class="mn-brand__status">SYS ONLINE · 50,000 NODES · 99.9% LINK</p>
+
+        <div class="mn-brand__ctas">
+          <a class="btn btn--primary" href="products-en.html">View products</a>
+          <a class="btn btn--secondary" href="about-en.html">About the company</a>
+        </div>
+      </div>
+
+      <nav class="mn-nav" aria-label="Main menu navigation">
+        <a class="mn-item" href="about-en.html">About</a>
+        <a class="mn-item" href="products-en.html">Products</a>
+        <a class="mn-item" href="services-en.html">Services</a>
+        <a class="mn-item" href="support-en.html">Support</a>
+        <a class="mn-item" href="news-en.html">News</a>
+        <a class="mn-item" href="contact-en.html">Contact</a>
+      </nav>
+
+      <div class="mn-hero__visual">
+        <div class="slider" data-slider>
+          <div class="slider__viewport">
+            <div class="slider__track" data-slider-track>
+              <figure class="slider__slide">
+                <img src="assets/img/product-s1.svg?v=render1" alt="Environmental Sensor S1" width="640" height="480">
+              </figure>
+              <figure class="slider__slide">
+                <img src="assets/img/product-g2.svg?v=render1" alt="Smart Gateway G2" width="640" height="480">
+              </figure>
+              <figure class="slider__slide">
+                <img src="assets/img/product-e3.svg?v=render1" alt="Energy Management Kit E3" width="640" height="480">
+              </figure>
+            </div>
+          </div>
+
+          <button class="slider__nav slider__nav--prev" type="button" aria-label="Previous slide" data-slider-prev></button>
+          <button class="slider__nav slider__nav--next" type="button" aria-label="Next slide" data-slider-next></button>
+
+          <div class="slider__dots" role="tablist" aria-label="Slide navigation" data-slider-dots>
+            <button class="slider__dot is-active" type="button" role="tab" aria-selected="true" aria-label="Slide 1"></button>
+            <button class="slider__dot" type="button" role="tab" aria-selected="false" aria-label="Slide 2"></button>
+            <button class="slider__dot" type="button" role="tab" aria-selected="false" aria-label="Slide 3"></button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- 既有 Hero 折疊為緊湊簡介條，保留全部結構與文案 -->
+  <section class="hero bg-gradient" style="min-height:auto;padding-top:var(--s20);padding-bottom:var(--s12)">
+    <span class="hero-corner" aria-hidden="true"></span>
+    <span class="hero-corner" aria-hidden="true"></span>
+    <span class="hero-corner" aria-hidden="true"></span>
+
+    <div class="container hero__inner">
+      <div class="hero-left">
+        <div class="hero-accent" aria-hidden="true"></div>
+        <p class="hero-eyebrow">IoT Hardware &amp; Edge Gateway</p>
+        <p class="hero-title-en">OBSIDIAN Technologies</p>
+        <div class="hero-rule" aria-hidden="true"></div>
+        <p class="hero-desc readable-panel">
+          Industrial and residential IoT across three product lines: sensing, edge gateways and energy management. Data is processed locally at the edge, so a broken link doesn't stop core decisions.
+        </p>
+
+        <div class="hero-sectors">
+          <span class="hero-sector">Factory</span>
+          <span class="hero-sector">Building</span>
+          <span class="hero-sector">Residential</span>
+          <span class="hero-sector">Data centre</span>
+        </div>
+
+        <div class="hero-ctas">
+          <a class="btn btn--primary" href="products-en.html">View products</a>
+          <a class="btn btn--secondary" href="about-en.html">About the company</a>
+        </div>
+      </div>
+
+      <div class="hero-right">
+        <div class="holo-showcase">
+          <div class="holo-glow-line" aria-hidden="true"></div>
+          <div class="holo-frame">
+            <img src="assets/img/network.svg?v=render1" alt="Topology diagram of an OBSIDIAN G2 gateway connected to four terminals" width="800" height="600">
+          </div>
+        </div>
+
+        <div class="hero-side-stats">
+          <div class="side-stat">
+            <span class="side-stat-val">50,000+</span>
+            <span class="side-stat-lbl">Devices online</span>
+          </div>
+          <div class="side-stat">
+            <span class="side-stat-val">99.9%</span>
+            <span class="side-stat-lbl">Connectivity</span>
+          </div>
+          <div class="side-stat">
+            <span class="side-stat-val">2016</span>
+            <span class="side-stat-lbl">Founded</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="hero-ticker">
+      <span class="hero-ticker-label">Live</span>
+      <div class="hero-ticker-track">
+        <span><b>S1</b> Environmental Sensor · HK$1,280 · 7 working days lead time</span>
+        <span><b>G2</b> Smart Gateway · HK$3,680 · 10 working days lead time</span>
+        <span><b>E3</b> Energy Management Kit · HK$8,900 · 14 working days lead time</span>
+        <span><b>OPS</b> Cloud hosting · HK$48/unit/month · cancel anytime</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= 01 編號四宮格（報告 §6.3：2列 gap 14px） ================= -->
+  <section class="section bg-void" id="divisions">
+    <div class="container">
+      <div class="section-head">
+        <span class="section-label">Products</span>
+        <h2 class="h2">Core product lines</h2>
+        <p class="section-head__sub readable-panel">
+          From single-point collection to whole-building energy scheduling, covering both factory and residential deployment density.
+        </p>
+      </div>
+
+      <div class="div-grid">
+        <article class="div-card" data-reveal="0">
+          <span class="div-num">01｜</span>
+          <h3 class="div-name">Environmental Sensor</h3>
+          <p class="div-name-en">S1 / Sensor Terminal</p>
+          <p class="div-desc readable-panel">
+            Four-in-one sensing of temperature, humidity, CO₂ and PM2.5. Wall-mounted, reports independently, or managed centrally by G2.
+          </p>
+          <span class="tag">Four-in-one</span>
+          <span class="more">View specs</span>
+          <span class="div-accent" aria-hidden="true"></span>
+        </article>
+
+        <article class="div-card" data-reveal="80">
+          <span class="div-num">02｜</span>
+          <h3 class="div-name">Smart Gateway</h3>
+          <p class="div-name-en">G2 / Edge Gateway</p>
+          <p class="div-desc readable-panel">
+            8 concurrent devices, 72 hours of local buffering during outages, backfilled by timestamp once the link recovers — no lost points.
+          </p>
+          <span class="tag">Edge inference</span>
+          <span class="more">View specs</span>
+          <span class="div-accent" aria-hidden="true"></span>
+        </article>
+
+        <article class="div-card" data-reveal="160">
+          <span class="div-num">03｜</span>
+          <h3 class="div-name">Energy Management Kit</h3>
+          <p class="div-name-en">E3 / Energy Suite</p>
+          <p class="div-desc readable-panel">
+            12 circuits with time-of-use pricing, bills split by floor and use, reports exportable to CSV and wired into existing finance workflows.
+          </p>
+          <span class="tag">Time-of-use pricing</span>
+          <span class="more">View specs</span>
+          <span class="div-accent" aria-hidden="true"></span>
+        </article>
+
+        <article class="div-card" data-reveal="240">
+          <span class="div-num">04｜</span>
+          <h3 class="div-name">Cloud hosting service</h3>
+          <p class="div-name-en">SVC / Cloud Operations</p>
+          <p class="div-desc readable-panel">
+            Optional monthly plan with device health checks, staged firmware rollouts, alert delivery and a monthly health report.
+          </p>
+          <span class="tag">Billed monthly</span>
+          <span class="more">View services</span>
+          <span class="div-accent" aria-hidden="true"></span>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= 02 新聞演播室（報告 §6.4） ================= -->
+  <section class="section section--mid bg-void2 nb-section" id="broadcast">
+    <div class="container">
+      <div class="section-head">
+        <span class="section-label">Broadcast</span>
+        <h2 class="h2">Company news</h2>
+      </div>
+
+      <div class="nb-frame">
+        <div class="nb-top">
+          <span class="nb-channel" data-nb-channel>CH01 / General</span>
+          <span class="nb-ts" data-nb-ts>2077.05.28 00:00</span>
+        </div>
+
+        <div class="nb-main">
+          <div class="nb-studio">
+            <span class="label">Featured</span>
+            <h3 class="nb-lead-title mt-3" data-nb-lead-title>
+              G3 gateway passes environmental reliability test, entering pilot production
+            </h3>
+            <p class="nb-lead-desc readable-panel" data-nb-lead-desc>
+              The new gateway ran 720 hours uninterrupted at 85°C and high humidity, with local buffering expanded to 120 hours. Pilot batches ship next quarter; existing G2 users can upgrade for a fee.
+            </p>
+            <div class="mt-8">
+              <a class="btn btn--secondary" href="news-en.html">Read more</a>
+            </div>
+          </div>
+
+          <div class="nb-sidebar">
+            <span class="label label--dim">List</span>
+            <ul class="mt-3" id="nbList"></ul>
+          </div>
+        </div>
+
+        <div class="nb-ticker-wrap">
+          <span class="nb-ticker-label">Market</span>
+          <div class="nb-ticker-track" data-nb-ticker>
+            <span>S1 Environmental Sensor <b>HK$1,280</b> +0.00%</span>
+            <span>G2 Smart Gateway <b>HK$3,680</b> +1.20%</span>
+            <span>E3 Energy Management Kit <b>HK$8,900</b> −0.40%</span>
+            <span>Cloud hosting <b>HK$48</b> Stable</span>
+          </div>
+        </div>
+
+        <div class="nb-bottom">
+          <div class="nb-channels" data-nb-channels>
+            <button class="nb-ch is-active" type="button" data-nb-ch="CH01">CH01 General</button>
+            <button class="nb-ch" type="button" data-nb-ch="CH02">CH02 Products</button>
+            <button class="nb-ch" type="button" data-nb-ch="CH03">CH03 Partnership</button>
+            <button class="nb-ch" type="button" data-nb-ch="CH04">CH04 Certification</button>
+          </div>
+          <span class="caption">Updated 2026-09-28</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= 03 創新專區（紫） ================= -->
+  <section class="section bg-void" style="background:linear-gradient(160deg,#0A0620 0%,#1A0F3D 55%,#2E1065 100%)">
+    <div class="container">
+      <div class="section-head">
+        <span class="section-label">Innovation</span>
+        <h2 class="h2">Innovation</h2>
+        <p class="section-head__sub readable-panel">
+          Proactive features, presented separately from the passive sensing line, which is why this block uses neon purple.
+        </p>
+      </div>
+
+      <div class="div-grid">
+        <article class="div-card" data-reveal="0"
+          style="background:rgba(59,29,138,.35);border-color:rgba(123,47,255,.3)">
+          <span class="div-num" style="color:var(--purple-bright)">G2｜</span>
+          <h3 class="div-name">Anomaly detection</h3>
+          <p class="div-name-en" style="color:var(--on-purple-zone-steel)">AI Anomaly Detection</p>
+          <p class="div-desc readable-panel" style="color:#D4C2F5">
+            Runs a lightweight model locally on the gateway, compares each device against its historical baseline and raises alerts on site when readings drift, without waiting for a cloud round trip.
+          </p>
+          <span class="tag" style="color:var(--purple-bright);border-color:rgba(168,85,247,.4)">On-device inference</span>
+          <span class="div-accent" style="background:var(--purple)" aria-hidden="true"></span>
+        </article>
+
+        <article class="div-card" data-reveal="80"
+          style="background:rgba(59,29,138,.35);border-color:rgba(123,47,255,.3)">
+          <span class="div-num" style="color:var(--purple-bright)">E3｜</span>
+          <h3 class="div-name">Usage forecast</h3>
+          <p class="div-name-en" style="color:var(--on-purple-zone-steel)">Forecast Module</p>
+          <p class="div-desc readable-panel" style="color:#D4C2F5">
+            Projects next month's range from historical usage and production schedules. Forecasts are for planning reference only and never adjust device policies automatically.
+          </p>
+          <span class="tag" style="color:var(--purple-bright);border-color:rgba(168,85,247,.4)">Confidence interval</span>
+          <span class="div-accent" style="background:var(--purple)" aria-hidden="true"></span>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= 04 數據指標（報告 §6.5：雙列 gap 100px + 8 卡） ================= -->
+  <section class="section section--tall bg-void" id="intro">
+    <div class="container">
+      <div class="section-head">
+        <span class="section-label">Metrics</span>
+        <h2 class="h2">The numbers</h2>
+      </div>
+
+      <div class="intro-grid">
+        <div class="intro-left">
+          <p class="body-text">
+            We won't describe reliability with adjectives. These figures come from operating records dated 30 September 2026, covering deployments in Hong Kong, Macau and Southeast Asia across four countries and regions.
+          </p>
+
+          <blockquote class="intro-quote">
+            Reliable connectivity for every device
+          </blockquote>
+
+          <p class="body-text">
+            Work after delivery is written into the contract too: site survey, cloud hosting, extended warranty, data migration and on-site training. The services page states what each service does *not* include, so there is no ambiguity after handover.
+          </p>
+
+          <div class="mt-8">
+            <a class="btn btn--secondary" href="about-en.html">About us</a>
+          </div>
+        </div>
+
+        <div class="intro-right">
+          <div class="intro-stat">
+            <span class="stat-num">50,000+</span>
+            <span class="stat-lbl">Devices online</span>
+          </div>
+          <div class="intro-stat">
+            <span class="stat-num">99.9%</span>
+            <span class="stat-lbl">Connectivity (last 12 months)</span>
+          </div>
+          <div class="intro-stat">
+            <span class="stat-num">0.02s</span>
+            <span class="stat-lbl">Median edge decision latency</span>
+          </div>
+          <div class="intro-stat">
+            <span class="stat-num">72h</span>
+            <span class="stat-lbl">Local buffer during outages</span>
+          </div>
+          <div class="intro-stat">
+            <span class="stat-num">8</span>
+            <span class="stat-lbl">Concurrent devices per gateway</span>
+          </div>
+          <div class="intro-stat">
+            <span class="stat-num">12</span>
+            <span class="stat-lbl">Max circuits on E3</span>
+          </div>
+          <div class="intro-stat">
+            <span class="stat-num">148</span>
+            <span class="stat-lbl">Total employees</span>
+          </div>
+          <div class="intro-stat">
+            <span class="stat-num">4.2h</span>
+            <span class="stat-lbl">Average ticket response</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= 05 CTA ================= -->
+  <section class="section section--mid bg-void2">
+    <div class="container">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:var(--s8);flex-wrap:wrap">
+        <div>
+          <span class="section-label">Contact</span>
+          <h2 class="h2">Need a device configuration proposal?</h2>
+          <p class="section-head__sub readable-panel">Tell us your site conditions and we'll propose a configuration based on point count and network environment.</p>
+        </div>
+        <div style="display:flex;gap:var(--s3);flex-wrap:wrap">
+          <a class="btn btn--primary" href="contact-en.html">Contact us</a>
+          <a class="btn btn--secondary" href="products-en.html">Browse products</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<!-- ================= FOOTER（報告 §6.6：2fr 1fr 1fr 1fr gap 60px） ================= -->
+<footer class="site-footer">
+  <div class="ft-inner">
+    <div class="ft-top">
+      <div class="ft-brand">
+        <img src="assets/img/logo.svg" alt="OBSIDIAN" width="800" height="208" loading="lazy">
+        <p class="ft-slogan">Reliable connectivity for every device</p>
+        <p class="ft-desc">
+          OBSIDIAN Technologies · Founded 2016 at Hong Kong Science Park<br>
+          Focused on industrial and residential IoT: sensing, edge connectivity and energy management.
+        </p>
+      </div>
+
+      <div class="ft-col">
+        <h4>Products</h4>
+        <a href="products-en.html">Environmental Sensor S1</a>
+        <a href="products-en.html">Smart Gateway G2</a>
+        <a href="products-en.html">Energy Management Kit E3</a>
+        <a href="services-en.html">Service plans</a>
+      </div>
+
+      <div class="ft-col">
+        <h4>Company</h4>
+        <a href="about-en.html">About us</a>
+        <a href="news-en.html">Company news</a>
+        <a href="careers-en.html">Careers</a>
+        <a href="sitemap-en.html">Sitemap</a>
+      </div>
+
+      <div class="ft-col">
+        <h4>Support</h4>
+        <a href="support-en.html">Technical support</a>
+        <a href="contact-en.html">Contact us</a>
+        <a href="login-en.html">Customer sign-in</a>
+        <a href="register-en.html">Create account</a>
+      </div>
+    </div>
+
+    <div class="ft-rule"></div>
+
+    <div class="ft-bottom">
+      <span>© <span data-year>2026</span> OBSIDIAN Technologies Ltd.</span>
+      <span class="ft-final">OBSIDIAN TECHNOLOGIES · CIS222 GROUP PROJECT</span>
+      <span>Hong Kong Science Park</span>
+    </div>
+  </div>
+</footer>
+
+<div class="toast" role="status" aria-live="polite"></div>
+
+<script>
+/* Background: .obsidian-bg is injected by main.js (CSS layers only).
+   Keep the legacy #particles canvas inert so only one rAF loop runs. */
+(function () {
+  var p = document.getElementById("particles");
+  if (p) { p.id = "particles-off"; p.setAttribute("hidden", ""); }
+})();
+</script>
+<script src="assets/js/main.js?v=railRoll1"></script>
+<script>
+/* 首頁背景影片：減少動效偏好下不播放；切換分頁時暫停，避免後台空耗 */
+(function () {
+  var vids = document.querySelectorAll('.hero-video-bg video');
+  if (!vids.length) return;
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  function playAll() {
+    Array.prototype.forEach.call(vids, function (v) {
+      v.play().catch(function () { /* 自動播放被攔截時保留海報圖 */ });
+    });
+  }
+  playAll();
+  document.addEventListener('visibilitychange', function () {
+    Array.prototype.forEach.call(vids, function (v) {
+      if (document.hidden) { v.pause(); }
+      else { v.play().catch(function () {}); }
+    });
+  });
+})();
+</script>
+<script>
+/* 新聞頻道資料（報告 §6.4：4 頻道，每頻道獨立 ticker） */
+window.OBSIDIAN_NEWS = {
+  CH01: {
+    label: 'CH01 / General',
+    lead: {
+      title: 'G3 gateway passes environmental reliability test, entering pilot production',
+      desc: 'The new gateway ran 720 hours uninterrupted at 85°C and high humidity, with local buffering expanded to 120 hours. Pilot batches ship next quarter; existing G2 users can upgrade for a fee.'
+    },
+    list: [
+      ['2026-09-28', 'G3 gateway passed environmental reliability testing'],
+      ['2026-09-12', 'Autumn tech expo demonstrated S1 scenarios live'],
+      ['2026-08-20', 'Manufacturer framework agreement · 1,200 S1 units deployed'],
+      ['2026-07-05', 'E3 certified by an independent metrology body'],
+      ['2026-06-18', 'Firmware v2.4 fixed a time-zone pricing offset']
+    ],
+    ticker: '<span>S1 感測終端 <b>HK$1,280</b> +0.00%</span><span>G2 智能網關 <b>HK$3,680</b> +1.20%</span><span>E3 能耗套件 <b>HK$8,900</b> −0.40%</span><span>雲端託管 <b>HK$48</b> 穩定</span><span>標準安裝 <b>已含</b> 隨單</span><span>延長質保 <b>+18%</b> 至 60 個月</span><span>數據遷移 <b>HK$2,400</b> 起</span><span>現場培訓 <b>HK$3,200</b> 每場</span>'
+  },
+  CH02: {
+    label: 'CH02 / Products',
+    lead: {
+      title: 'S1 firmware v2.4.1 released, fixing a night-time baseline drift',
+      desc: 'At lower night-time temperatures the S1 auto-baseline drifted by about 0.3°C. The new version uses the median of the last 24 hours as its baseline, removing the drift.'
+    },
+    list: [
+      ['2026-09-28', 'S1 firmware v2.4.1 released'],
+      ['2026-09-02', 'G2 firmware v3.2.0 adds inference logging'],
+      ['2026-08-14', 'G2 datasheet raised to v3.0'],
+      ['2026-06-18', 'E3 firmware v2.4.0 time-zone fix'],
+      ['2026-05-09', 'Cloud hosting service launched']
+    ],
+    ticker: '<span>S1 v2.4.1 <b>已發布</b></span><span>G2 v3.2.0 <b>已發布</b></span><span>E3 v2.4.0 <b>已發布</b></span><span>固件版本 <b>3</b> 條線</span><span>規格書 <b>v3.0</b> 已更新</span><span>接線圖 <b>PDF</b> 可下載</span><span>灰度升級 <b>已啟用</b></span><span>版本記錄 <b>可回溯</b></span>'
+  },
+  CH03: {
+    label: 'CH03 / Partnership',
+    lead: {
+      title: 'Framework agreement signed with a manufacturer to deploy 1,200 S1 units',
+      desc: '1,200 environmental sensors deployed across three plants, managed centrally by 18 G2 gateways. Rollout completes in four batches, expected to finish in Q1 2027.'
+    },
+    list: [
+      ['2026-08-20', 'Manufacturer framework agreement, 1,200 units'],
+      ['2026-07-28', 'Property company E3 cost-allocation pilot'],
+      ['2026-06-11', 'Two channel partners authorised'],
+      ['2026-05-06', 'Hong Kong building batch delivered'],
+      ['2026-04-15', 'Overseas partner confirmed integration']
+    ],
+    ticker: '<span>框架協議 <b>1,200</b> 台</span><span>渠道夥伴 <b>2</b> 家</span><span>樓宇項目 <b>4</b> 個</span><span>海外 <b>4</b> 地區</span><span>廠區部署 <b>3</b> 個</span><span>G2 納管 <b>18</b> 台</span><span>交付批次 <b>4</b> 批</span><span>預計完成 <b>2027 Q1</b></span>'
+  },
+  CH04: {
+    label: 'CH04 / Certification',
+    lead: {
+      title: 'E3 energy kit passes independent metrology certification',
+      desc: 'E3 measurement accuracy confirmed at ±0.5% by an independent body, meeting local electricity meter regulations. Report formats connect to existing finance systems with no second conversion.'
+    },
+    list: [
+      ['2026-07-05', 'E3 metrology certification ±0.5%'],
+      ['2026-05-22', 'G2 environmental reliability, 720h passed'],
+      ['2026-04-30', 'ISO 9001 recertified'],
+      ['2026-03-18', 'S1 IP54 ingress protection certified'],
+      ['2026-02-09', 'RoHS compliance statement updated']
+    ],
+    ticker: '<span>計量認證 <b>±0.5%</b></span><span>環境測驗 <b>720h</b></span><span>防護等級 <b>IP54</b></span><span>體系 <b>ISO 9001</b></span><span>工作溫度 <b>−20~60°C</b></span><span>RoHS <b>已聲明</b></span><span>校準週期 <b>12</b> 個月</span><span>計量精度 <b>±0.5%</b></span>'
+  }
+};
+
+/* 渲染初始頻道列表 */
+(function () {
+  var ul = document.getElementById('nbList');
+  if (!ul) return;
+  ul.innerHTML = window.OBSIDIAN_NEWS.CH01.list.map(function (row) {
+    return '<li class="nb-item"><span class="nb-item-date">' + row[0] +
+      '</span><span class="nb-item-title">' + row[1] + '</span></li>';
+  }).join('');
+})();
+</script>
+
+</body>
+</html>
